@@ -6,7 +6,10 @@ Tests influxdb component.
 """
 import copy
 import unittest
-from unittest import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import influxdb as influx_client
 

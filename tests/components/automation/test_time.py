@@ -6,7 +6,10 @@ Tests time automation.
 """
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util

@@ -5,7 +5,10 @@ tests.components.alarm_control_panel.test_manual
 Tests manual alarm control panel component.
 """
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.core as ha
 from homeassistant.const import (

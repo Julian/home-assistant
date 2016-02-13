@@ -5,7 +5,10 @@ tests.components.test_splunk
 Tests splunk component.
 """
 import unittest
-from unittest import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import homeassistant.components.splunk as splunk
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED

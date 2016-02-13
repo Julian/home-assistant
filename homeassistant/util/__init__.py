@@ -7,18 +7,21 @@ Helper methods for various modules.
 from datetime import datetime
 from functools import wraps
 from future.moves import queue
+from future.utils import PY3
 from itertools import chain
 import collections
 import enum
+import inspect
 import random
 import re
 import socket
 import string
 import threading
 from functools import wraps
-from types import MappingProxyType
 
 from .dt import datetime_to_local_str, utcnow
+from homeassistant.util.compat import MappingProxyType
+
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -239,13 +242,16 @@ class Throttle(object):
         #  - an unbound function on a class
         #  - a method (bound function on a class)
 
-        # We want to be able to differentiate between function and unbound
-        # methods (which are considered functions).
-        # All methods have the classname in their qualname seperated by a '.'
-        # Functions have a '.' in their qualname if defined inline, but will
-        # be prefixed by '.<locals>.' so we strip that out.
-        is_func = (not hasattr(method, '__self__') and
-                   '.' not in method.__qualname__.split('.<locals>.')[-1])
+        if PY3:
+            # We want to be able to differentiate between function and unbound
+            # methods (which are considered functions).  All methods have the
+            # classname in their qualname seperated by a '.' Functions have a
+            # '.' in their qualname if defined inline, but will be prefixed by
+            # '.<locals>.' so we strip that out.
+            is_func = (not hasattr(method, '__self__') and
+                       '.' not in method.__qualname__.split('.<locals>.')[-1])
+        else:
+            is_func = not inspect.ismethod(method)
 
         @wraps(method)
         def wrapper(*args, **kwargs):

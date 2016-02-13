@@ -7,6 +7,7 @@ import unittest
 
 import homeassistant.bootstrap as bootstrap
 import homeassistant.util.package as package
+from homeassistant.util.compat import TemporaryDirectory
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'resources'))
@@ -22,7 +23,7 @@ class TestPackageUtil(unittest.TestCase):
 
     def setUp(self):
         """ Create local library for testing """
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = TemporaryDirectory()
         self.lib_dir = os.path.join(self.tmp_dir.name, 'lib')
 
     def tearDown(self):

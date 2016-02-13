@@ -10,7 +10,6 @@ import time
 import logging
 import signal
 import threading
-from types import MappingProxyType
 import enum
 import functools as ft
 
@@ -24,6 +23,7 @@ from homeassistant.const import (
     RESTART_EXIT_CODE)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
+from homeassistant.util.compat import MappingProxyType
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location

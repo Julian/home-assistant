@@ -5,7 +5,10 @@ tests.components.switch.test_mfi
 Tests mFi switch.
 """
 import unittest
-import unittest.mock as mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import homeassistant.core as ha
 import homeassistant.components.switch as switch

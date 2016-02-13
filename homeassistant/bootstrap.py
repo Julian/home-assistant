@@ -10,6 +10,7 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 from collections import defaultdict
+import errno
 import logging
 import logging.handlers
 import os
@@ -294,7 +295,9 @@ def process_ha_config_upgrade(hass):
     try:
         with open(version_path, 'rt') as inp:
             conf_version = inp.readline().strip()
-    except FileNotFoundError:
+    except (IOError, OSError) as error:
+        if error.errno != errno.ENOENT:
+            raise
         # Last version to not have this file
         conf_version = '0.7.7'
 

@@ -5,7 +5,10 @@ tests.component.media_player.test_demo
 Tests demo media_player component.
 """
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from pprint import pprint
 import homeassistant.core as ha
 from homeassistant.const import (

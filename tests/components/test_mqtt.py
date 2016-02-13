@@ -6,7 +6,10 @@ Tests MQTT component.
 """
 from collections import namedtuple
 import unittest
-from unittest import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import socket
 
 import homeassistant.components.mqtt as mqtt

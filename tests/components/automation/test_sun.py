@@ -6,7 +6,10 @@ Tests sun automation.
 """
 from datetime import datetime
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.core as ha
 from homeassistant.components import sun

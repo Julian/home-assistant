@@ -7,11 +7,14 @@ Tests demo component.
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
-from subprocess import SubprocessError
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from homeassistant import core
 from homeassistant.components import shell_command
+from homeassistant.util.compat import TemporaryDirectory
 
 
 class TestShellCommand(unittest.TestCase):
@@ -26,7 +29,7 @@ class TestShellCommand(unittest.TestCase):
 
     def test_executing_service(self):
         """ Test if able to call a configured service. """
-        with tempfile.TemporaryDirectory() as tempdirname:
+        with TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'called.txt')
             self.assertTrue(shell_command.setup(self.hass, {
                 'shell_command': {
@@ -53,10 +56,10 @@ class TestShellCommand(unittest.TestCase):
             }}))
 
     @patch('homeassistant.components.shell_command.subprocess.call',
-           side_effect=SubprocessError)
+           side_effect=Exception)
     @patch('homeassistant.components.shell_command._LOGGER.error')
     def test_subprocess_raising_error(self, mock_call, mock_error):
-        with tempfile.TemporaryDirectory() as tempdirname:
+        with TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'called.txt')
             self.assertTrue(shell_command.setup(self.hass, {
                 'shell_command': {

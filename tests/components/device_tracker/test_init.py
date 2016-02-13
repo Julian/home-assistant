@@ -6,7 +6,10 @@ Tests the device tracker compoments.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from datetime import datetime, timedelta
 import os
 

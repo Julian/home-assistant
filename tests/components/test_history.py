@@ -8,7 +8,10 @@ Tests the history component.
 from datetime import timedelta
 import os
 import unittest
-from unittest.mock import patch, sentinel
+try:
+    from unittest.mock import patch, sentinel
+except ImportError:
+    from mock import patch, sentinel
 
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util

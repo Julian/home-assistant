@@ -36,7 +36,7 @@ def setup(hass, config):
             subprocess.call(conf[call.service], shell=True,
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL)
-        except subprocess.SubprocessError:
+        except Exception:
             _LOGGER.exception('Error running command')
 
     for name in conf.keys():

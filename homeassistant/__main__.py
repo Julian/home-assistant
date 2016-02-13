@@ -1,6 +1,7 @@
 """ Starts home assistant. """
 from __future__ import print_function
 
+from io import open
 from multiprocessing import Process
 import signal
 import sys

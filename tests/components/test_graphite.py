@@ -6,7 +6,10 @@ Tests graphite feeder.
 """
 import socket
 import unittest
-from unittest import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import homeassistant.core as ha
 import homeassistant.components.graphite as graphite

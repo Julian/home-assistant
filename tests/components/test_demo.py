@@ -6,7 +6,10 @@ Tests demo component.
 """
 import json
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.core as ha
 import homeassistant.components.demo as demo

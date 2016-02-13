@@ -6,7 +6,10 @@ Test state helpers.
 """
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import homeassistant.core as ha
 import homeassistant.components as core_components

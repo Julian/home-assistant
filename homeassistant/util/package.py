@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 import threading
-from urllib.parse import urlparse
+from future.moves.urllib.parse import urlparse
 
 import pkg_resources
 
@@ -35,7 +35,7 @@ def install_package(package, upgrade=True, target=None):
 
         try:
             return subprocess.call(args) == 0
-        except subprocess.SubprocessError:
+        except Exception:
             _LOGGER.exception('Unable to install pacakge %s', package)
             return False
 

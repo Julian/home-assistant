@@ -5,7 +5,10 @@ tests.components.sensor.test_mfi
 Tests mFi sensor.
 """
 import unittest
-import unittest.mock as mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import homeassistant.core as ha
 import homeassistant.components.sensor as sensor

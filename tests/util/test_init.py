@@ -6,7 +6,10 @@ Tests Home Assistant util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from datetime import datetime, timedelta
 
 from homeassistant import util

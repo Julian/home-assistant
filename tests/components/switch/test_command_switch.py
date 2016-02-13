@@ -12,6 +12,7 @@ import unittest
 from homeassistant import core
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
+from homeassistant.util.compat import TemporaryDirectory
 
 
 class TestCommandSwitch(unittest.TestCase):
@@ -57,7 +58,7 @@ class TestCommandSwitch(unittest.TestCase):
 
 
     def test_state_value(self):
-        with tempfile.TemporaryDirectory() as tempdirname:
+        with TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
                 'statecmd': 'cat {}'.format(path),
@@ -91,7 +92,7 @@ class TestCommandSwitch(unittest.TestCase):
 
 
     def test_state_json_value(self):
-        with tempfile.TemporaryDirectory() as tempdirname:
+        with TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             oncmd = json.dumps({'status': 'ok'})
             offcmd = json.dumps({'status': 'nope'})
@@ -126,7 +127,7 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
     def test_state_code(self):
-        with tempfile.TemporaryDirectory() as tempdirname:
+        with TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
                 'statecmd': 'cat {}'.format(path),

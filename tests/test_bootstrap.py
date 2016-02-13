@@ -14,6 +14,7 @@ from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.compat import TemporaryDirectory
 
 
 class TestBootstrap(unittest.TestCase):
@@ -40,7 +41,7 @@ class TestBootstrap(unittest.TestCase):
                              sorted(hass.config.components))
 
     def test_remove_lib_on_upgrade(self):
-        with tempfile.TemporaryDirectory() as config_dir:
+        with TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
             lib_dir = os.path.join(config_dir, 'lib')
             check_file = os.path.join(lib_dir, 'check')
@@ -61,7 +62,7 @@ class TestBootstrap(unittest.TestCase):
             self.assertFalse(os.path.isfile(check_file))
 
     def test_not_remove_lib_if_not_upgrade(self):
-        with tempfile.TemporaryDirectory() as config_dir:
+        with TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
             lib_dir = os.path.join(config_dir, 'lib')
             check_file = os.path.join(lib_dir, 'check')

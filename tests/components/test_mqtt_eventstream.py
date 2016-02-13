@@ -6,7 +6,10 @@ Tests MQTT eventstream component.
 """
 import json
 import unittest
-from unittest.mock import ANY, patch
+try:
+    from unittest.mock import ANY, patch
+except ImportError:
+    from mock import ANY, patch
 
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED

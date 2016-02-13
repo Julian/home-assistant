@@ -8,7 +8,10 @@ Tests the entity component helper.
 from collections import OrderedDict
 import logging
 import unittest
-from unittest.mock import patch, Mock
+try:
+    from unittest.mock import patch, Mock
+except ImportError:
+    from mock import patch, Mock
 
 import homeassistant.core as ha
 import homeassistant.loader as loader

@@ -5,3 +5,5 @@ pytest>=2.8.0
 pytest-cov>=2.2.0
 pytest-timeout>=1.0.0
 betamax>=0.5.1
+mock; python_version == '2.7'
+-r requirements_all.txt

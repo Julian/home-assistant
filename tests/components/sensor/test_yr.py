@@ -5,7 +5,10 @@ tests.components.sensor.test_yr
 Tests Yr sensor.
 """
 from datetime import datetime
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import pytest
 

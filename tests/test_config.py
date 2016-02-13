@@ -5,6 +5,7 @@ tests.test_config
 Tests config utils.
 """
 # pylint: disable=too-many-public-methods,protected-access
+import os
 import unittest
 try:
     from unittest import mock
