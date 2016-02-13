@@ -1,34 +1,11 @@
 """
 homeassistant.components.device_tracker.netgear
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Device tracker platform that supports scanning a Netgear router for device
 presence.
 
-Configuration:
-
-To use the Netgear tracker you will need to add something like the following
-to your config/configuration.yaml
-
-device_tracker:
-  platform: netgear
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.netgear/
 """
 import logging
 from datetime import timedelta
@@ -42,7 +19,7 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3']
+REQUIREMENTS = ['pynetgear==0.3.2']
 
 
 def get_scanner(hass, config):
@@ -71,7 +48,6 @@ class NetgearDeviceScanner(object):
         self.lock = threading.Lock()
 
         if host is None:
-            print("BIER")
             self._api = pynetgear.Netgear()
         elif username is None:
             self._api = pynetgear.Netgear(password, host)
@@ -90,8 +66,9 @@ class NetgearDeviceScanner(object):
             _LOGGER.error("Failed to Login")
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
         self._update_info()
 
         return (device.mac for device in self.last_results)
@@ -106,8 +83,10 @@ class NetgearDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Retrieves latest information from the Netgear router.
-            Returns boolean if scanning successful. """
+        """
+        Retrieves latest information from the Netgear router.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return
 

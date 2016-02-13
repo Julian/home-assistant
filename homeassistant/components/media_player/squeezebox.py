@@ -1,39 +1,11 @@
 """
 homeassistant.components.media_player.squeezebox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to the Logitech SqueezeBox API
 
-Configuration:
-
-To use SqueezeBox add something like this to your configuration:
-
-media_player:
-  platform: squeezebox
-  host: 192.168.1.21
-  port: 9090
-  username: user
-  password: password
-
-Variables:
-
-host
-*Required
-The host name or address of the Logitech Media Server
-
-port
-*Optional
-Telnet port to Logitech Media Server, default 9090
-
-usermame
-*Optional
-Username, if password protection is enabled
-
-password
-*Optional
-Password, if password protection is enabled
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.squeezebox/
 """
-
 import logging
 import telnetlib
 from future.moves.urllib.parse import unquote
@@ -50,12 +22,11 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the squeezebox platform. """
     if not config.get(CONF_HOST):
@@ -91,7 +62,7 @@ class LogitechMediaServer(object):
         self.init_success = True if self.http_port else False
 
     def _get_http_port(self):
-        """ Get http port from media server, it is used to get cover art """
+        """ Get http port from media server, it is used to get cover art. """
         http_port = None
         try:
             http_port = self.query('pref', 'httpport', '?')
@@ -111,7 +82,7 @@ class LogitechMediaServer(object):
             return
 
     def create_players(self):
-        """ Create a list of SqueezeBoxDevices connected to the LMS """
+        """ Create a list of SqueezeBoxDevices connected to the LMS. """
         players = []
         count = self.query('player', 'count', '?')
         for index in range(0, int(count)):
@@ -121,7 +92,7 @@ class LogitechMediaServer(object):
         return players
 
     def query(self, *parameters):
-        """ Send request and await response from server  """
+        """ Send request and await response from server. """
         telnet = telnetlib.Telnet(self.host, self.port)
         if self._username and self._password:
             telnet.write('login {username} {password}\n'.format(
@@ -138,7 +109,7 @@ class LogitechMediaServer(object):
         return unquote(response)
 
     def get_player_status(self, player):
-        """ Get ithe status of a player """
+        """ Get ithe status of a player. """
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
@@ -166,7 +137,7 @@ class LogitechMediaServer(object):
 class SqueezeBoxDevice(MediaPlayerDevice):
     """ Represents a SqueezeBox device. """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
@@ -195,13 +166,13 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def update(self):
         """ Retrieve latest state. """
-        self._status = self._lms.get_player_status(self._name)
+        self._status = self._lms.get_player_status(self._id)
 
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
         if 'mixer volume' in self._status:
-            return int(self._status['mixer volume']) / 100.0
+            return int(float(self._status['mixer volume'])) / 100.0
 
     @property
     def is_volume_muted(self):
@@ -229,12 +200,19 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def media_image_url(self):
         """ Image url of current playing media. """
         if 'artwork_url' in self._status:
-            return self._status['artwork_url']
-        return 'http://{server}:{port}/music/current/cover.jpg?player={player}'\
-            .format(
-                server=self._lms.host,
-                port=self._lms.http_port,
+            media_url = self._status['artwork_url']
+        elif 'id' in self._status:
+            media_url = ('/music/{track_id}/cover.jpg').format(
+                track_id=self._status['id'])
+        else:
+            media_url = ('/music/current/cover.jpg?player={player}').format(
                 player=self._id)
+
+        base_url = 'http://{server}:{port}/'.format(
+            server=self._lms.host,
+            port=self._lms.http_port)
+
+        return urllib.parse.urljoin(base_url, media_url)
 
     @property
     def media_title(self):
@@ -291,7 +269,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def media_pause(self):
         """ media_pause media player. """
-        self._lms.query(self._id, 'pause', '0')
+        self._lms.query(self._id, 'pause', '1')
         self.update_ha_state()
 
     def media_next_track(self):
@@ -313,7 +291,3 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._lms.query(self._id, 'power', '1')
         self.update_ha_state()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()

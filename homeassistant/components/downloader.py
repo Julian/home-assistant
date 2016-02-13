@@ -1,19 +1,22 @@
 """
 homeassistant.components.downloader
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to download files.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/downloader/
 """
 import os
 import logging
 import re
 import threading
 
+import requests
+
 from homeassistant.helpers import validate_config
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
-DEPENDENCIES = []
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
@@ -29,18 +32,14 @@ def setup(hass, config):
 
     logger = logging.getLogger(__name__)
 
-    try:
-        import requests
-    except ImportError:
-        logger.exception(("Failed to import requests. "
-                          "Did you maybe not execute 'pip install requests'?"))
-
-        return False
-
     if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
         return False
 
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
+
+    # If path is relative, we assume relative to HASS config dir
+    if not os.path.isabs(download_path):
+        download_path = hass.config.path(download_path)
 
     if not os.path.isdir(download_path):
 

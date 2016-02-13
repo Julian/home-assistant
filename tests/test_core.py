@@ -7,10 +7,11 @@ Provides tests to verify that Home Assistant core works.
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import os
+import signal
 import unittest
 import time
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     from unittest import mock
@@ -25,8 +26,8 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
+    __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
 PST = pytz.timezone('America/Los_Angeles')
@@ -59,108 +60,42 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(calls))
 
+    # @patch('homeassistant.core.time.sleep')
     def test_block_till_stoped(self):
         """ Test if we can block till stop service is called. """
-        blocking_thread = threading.Thread(target=self.hass.block_till_stopped)
+        with patch('time.sleep'):
+            blocking_thread = threading.Thread(
+                target=self.hass.block_till_stopped)
 
-        self.assertFalse(blocking_thread.is_alive())
+            self.assertFalse(blocking_thread.is_alive())
 
-        blocking_thread.start()
+            blocking_thread.start()
 
-        # Threads are unpredictable, try 20 times if we're ready
-        wait_loops = 0
-        while not blocking_thread.is_alive() and wait_loops < 20:
-            wait_loops += 1
-            time.sleep(0.05)
+            self.assertTrue(blocking_thread.is_alive())
 
-        self.assertTrue(blocking_thread.is_alive())
+            self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
+            self.hass.pool.block_till_done()
 
-        self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
-        self.hass.pool.block_till_done()
-
-        # Threads are unpredictable, try 20 times if we're ready
-        wait_loops = 0
-        while blocking_thread.is_alive() and wait_loops < 20:
-            wait_loops += 1
+        # Wait for thread to stop
+        for _ in range(20):
+            if not blocking_thread.is_alive():
+                break
             time.sleep(0.05)
 
         self.assertFalse(blocking_thread.is_alive())
 
-    def test_stopping_with_keyboardinterrupt(self):
+    def test_stopping_with_sigterm(self):
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: calls.append(1))
 
-        def raise_keyboardinterrupt(length):
-            # We don't want to patch the sleep of the timer.
-            if length == 1:
-                raise KeyboardInterrupt
+        def send_sigterm(length):
+            os.kill(os.getpid(), signal.SIGTERM)
 
-        self.hass.start()
-
-        with mock.patch('time.sleep', raise_keyboardinterrupt):
+        with patch('homeassistant.core.time.sleep', send_sigterm):
             self.hass.block_till_stopped()
 
         self.assertEqual(1, len(calls))
-
-    def test_track_point_in_time(self):
-        """ Test track point in time. """
-        before_birthday = datetime(1985, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
-        birthday_paulus = datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
-        after_birthday = datetime(1987, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
-
-        runs = []
-
-        self.hass.track_point_in_utc_time(
-            lambda x: runs.append(1), birthday_paulus)
-
-        self._send_time_changed(before_birthday)
-        self.hass.pool.block_till_done()
-        self.assertEqual(0, len(runs))
-
-        self._send_time_changed(birthday_paulus)
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(runs))
-
-        # A point in time tracker will only fire once, this should do nothing
-        self._send_time_changed(birthday_paulus)
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(runs))
-
-        self.hass.track_point_in_time(
-            lambda x: runs.append(1), birthday_paulus)
-
-        self._send_time_changed(after_birthday)
-        self.hass.pool.block_till_done()
-        self.assertEqual(2, len(runs))
-
-    def test_track_time_change(self):
-        """ Test tracking time change. """
-        wildcard_runs = []
-        specific_runs = []
-
-        self.hass.track_time_change(lambda x: wildcard_runs.append(1))
-        self.hass.track_utc_time_change(
-            lambda x: specific_runs.append(1), second=[0, 30])
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.pool.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
-    def _send_time_changed(self, now):
-        """ Send a time changed event. """
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
 
 class TestEvent(unittest.TestCase):
@@ -277,10 +212,6 @@ class TestState(unittest.TestCase):
                          {ATTR_FRIENDLY_NAME: name})
         self.assertEqual(name, state.name)
 
-    def test_copy(self):
-        state = ha.State('domain.hello', 'world', {'some': 'attr'})
-        self.assertEqual(state, state.copy())
-
     def test_dict_conversion(self):
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
         self.assertEqual(state, ha.State.from_dict(state.as_dict()))
@@ -324,6 +255,18 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
 
+    def test_is_state_attr(self):
+        """ Test is_state_attr method. """
+        self.states.set("light.Bowl", "on", {"brightness": 100})
+        self.assertTrue(
+            self.states.is_state_attr('light.Bowl', 'brightness', 100))
+        self.assertFalse(
+            self.states.is_state_attr('light.Bowl', 'friendly_name', 200))
+        self.assertFalse(
+            self.states.is_state_attr('light.Bowl', 'friendly_name', 'Bowl'))
+        self.assertFalse(
+            self.states.is_state_attr('light.Non_existing', 'brightness', 100))
+
     def test_entity_ids(self):
         """ Test get_entity_ids method. """
         ent_ids = self.states.entity_ids()
@@ -348,52 +291,11 @@ class TestStateMachine(unittest.TestCase):
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
 
-    def test_track_change(self):
-        """ Test states.track_change. """
-        self.pool.add_worker()
-
-        # 2 lists to track how often our callbacks got called
-        specific_runs = []
-        wildcard_runs = []
-
-        self.states.track_change(
-            'light.Bowl', lambda a, b, c: specific_runs.append(1), 'on', 'off')
-
-        self.states.track_change(
-            'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
-            ha.MATCH_ALL, ha.MATCH_ALL)
-
-        # Set same state should not trigger a state change/listener
-        self.states.set('light.Bowl', 'on')
-        self.bus._pool.block_till_done()
-        self.assertEqual(0, len(specific_runs))
-        self.assertEqual(0, len(wildcard_runs))
-
-        # State change off -> on
-        self.states.set('light.Bowl', 'off')
-        self.bus._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        # State change off -> off
-        self.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.bus._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        # State change off -> on
-        self.states.set('light.Bowl', 'on')
-        self.bus._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
     def test_case_insensitivty(self):
         self.pool.add_worker()
         runs = []
 
-        track_state_change(
-            ha._MockHA(self.bus), 'light.BoWl', lambda a, b, c: runs.append(1),
-            ha.MATCH_ALL, ha.MATCH_ALL)
+        self.bus.listen(EVENT_STATE_CHANGED, lambda event: runs.append(event))
 
         self.states.set('light.BOWL', 'off')
         self.bus._pool.block_till_done()
@@ -404,9 +306,10 @@ class TestStateMachine(unittest.TestCase):
     def test_last_changed_not_updated_on_same_state(self):
         state = self.states.get('light.Bowl')
 
-        time.sleep(1)
+        future = dt_util.utcnow() + timedelta(hours=10)
 
-        self.states.set("light.Bowl", "on")
+        with patch('homeassistant.util.dt.utcnow', return_value=future):
+            self.states.set("light.Bowl", "on", {'attr': 'triggers_change'})
 
         self.assertEqual(state.last_changed,
                          self.states.get('light.Bowl').last_changed)
@@ -451,7 +354,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         expected = {
-            'test_domain': ['test_service']
+            'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
         self.assertEqual(expected, self.services.services)
 
@@ -565,6 +468,7 @@ class TestConfig(unittest.TestCase):
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
+            'version': __version__,
         }
 
         self.assertEqual(expected, self.config.as_dict())

@@ -3,35 +3,8 @@ homeassistant.components.switch.edimax
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Edimax switches.
 
-Configuration:
-
-To use the Edimax switch you will need to add something like the following to
-your config/configuration.yaml.
-
-switch:
-    platform: edimax
-    host: 192.168.1.32
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
-    name: Edimax Smart Plug
-
-Variables:
-
-host
-*Required
-This is the IP address of your Edimax switch. Example: 192.168.1.32
-
-username
-*Required
-Your username to access your Edimax switch.
-
-password
-*Required
-Your password.
-
-name
-*Optional
-The name to use when displaying this switch instance.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.edimax/
 """
 import logging
 
@@ -44,8 +17,8 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD,\
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '1234'
 DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
-REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/' +
-                '365301ce3ff26129a7910c501ead09ea625f3700.zip']
+REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
+                '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
 
 # setup logger
 _LOGGER = logging.getLogger(__name__)
@@ -54,12 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Edimax Smart Plugs. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        from pyedimax.smartplug import SmartPlug
-    except ImportError:
-        _LOGGER.error('Failed to import pyedimax')
-        return False
+    from pyedimax.smartplug import SmartPlug
 
     # pylint: disable=global-statement
     # check for required values in configuration file
@@ -89,7 +57,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def current_power_mwh(self):
-        """ Current power usage in mwh. """
+        """ Current power usage in mWh. """
         try:
             return float(self.smartplug.now_power) / 1000000.0
         except ValueError:
@@ -97,7 +65,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def today_power_mw(self):
-        """ Today total power usage in mw. """
+        """ Today total power usage in mW. """
         try:
             return float(self.smartplug.now_energy_day) / 1000.0
         except ValueError:

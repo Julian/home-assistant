@@ -1,9 +1,7 @@
 """
 homeassistant.components.sensor.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Demo platform that has two fake sensors.
-
+Demo platform that has a couple of fake sensors.
 """
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS, ATTR_BATTERY_LEVEL
@@ -15,7 +13,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoSensor('Outside Temperature', 15.6, TEMP_CELCIUS, 12),
         DemoSensor('Outside Humidity', 54, '%', None),
-        DemoSensor('Alarm back', 'Armed', None, None),
     ])
 
 
@@ -49,7 +46,7 @@ class DemoSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns the state attributes. """
         if self._battery:
             return {

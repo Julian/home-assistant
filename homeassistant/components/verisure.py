@@ -1,47 +1,14 @@
 """
 components.verisure
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+Provides support for verisure components.
 
-Provides support for verisure components
-
-Configuration:
-
-verisure:
-  username: user@example.com
-  password: password
-  alarm: 1
-  hygrometers: 0
-  smartplugs: 1
-  thermometers: 0
-
-
-Variables:
-
-username
-*Required
-Username to verisure mypages
-
-password
-*Required
-Password to verisure mypages
-
-alarm
-*Opional
-Set to 1 to show alarm, 0 to disable. Default 1
-
-hygrometers
-*Opional
-Set to 1 to show hygrometers, 0 to disable. Default 1
-
-smartplugs
-*Opional
-Set to 1 to show smartplugs, 0 to disable. Default 1
-
-thermometers
-*Opional
-Set to 1 to show thermometers, 0 to disable. Default 1
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/verisure/
 """
 import logging
+import time
+
 from datetime import timedelta
 
 from homeassistant import bootstrap
@@ -58,17 +25,19 @@ from homeassistant.const import (
 DOMAIN = "verisure"
 DISCOVER_SENSORS = 'verisure.sensors'
 DISCOVER_SWITCHES = 'verisure.switches'
+DISCOVER_ALARMS = 'verisure.alarm_control_panel'
+DISCOVER_LOCKS = 'verisure.lock'
 
-DEPENDENCIES = []
-REQUIREMENTS = [
-    'https://github.com/persandstrom/python-verisure/archive/' +
-    '9873c4527f01b1ba1f72ae60f7f35854390d59be.zip'
-    ]
+DEPENDENCIES = ['alarm_control_panel']
+REQUIREMENTS = ['vsure==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 MY_PAGES = None
-STATUS = {}
+ALARM_STATUS = {}
+SMARTPLUG_STATUS = {}
+CLIMATE_STATUS = {}
+LOCK_STATUS = {}
 
 VERISURE_LOGIN_ERROR = None
 VERISURE_ERROR = None
@@ -77,11 +46,13 @@ SHOW_THERMOMETERS = True
 SHOW_HYGROMETERS = True
 SHOW_ALARM = True
 SHOW_SMARTPLUGS = True
+SHOW_LOCKS = True
+CODE_DIGITS = 4
 
 # if wrong password was given don't try again
 WRONG_PASSWORD_GIVEN = False
 
-MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=1)
 
 
 def setup(hass, config):
@@ -94,15 +65,14 @@ def setup(hass, config):
 
     from verisure import MyPages, LoginError, Error
 
-    STATUS[MyPages.DEVICE_ALARM] = {}
-    STATUS[MyPages.DEVICE_CLIMATE] = {}
-    STATUS[MyPages.DEVICE_SMARTPLUG] = {}
-
-    global SHOW_THERMOMETERS, SHOW_HYGROMETERS, SHOW_ALARM, SHOW_SMARTPLUGS
+    global SHOW_THERMOMETERS, SHOW_HYGROMETERS,\
+        SHOW_ALARM, SHOW_SMARTPLUGS, SHOW_LOCKS, CODE_DIGITS
     SHOW_THERMOMETERS = int(config[DOMAIN].get('thermometers', '1'))
     SHOW_HYGROMETERS = int(config[DOMAIN].get('hygrometers', '1'))
     SHOW_ALARM = int(config[DOMAIN].get('alarm', '1'))
     SHOW_SMARTPLUGS = int(config[DOMAIN].get('smartplugs', '1'))
+    SHOW_LOCKS = int(config[DOMAIN].get('locks', '1'))
+    CODE_DIGITS = int(config[DOMAIN].get('code_digits', '4'))
 
     global MY_PAGES
     MY_PAGES = MyPages(
@@ -118,11 +88,16 @@ def setup(hass, config):
         _LOGGER.error('Could not log in to verisure mypages, %s', ex)
         return False
 
-    update()
+    update_alarm()
+    update_climate()
+    update_smartplug()
+    update_lock()
 
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('switch', DISCOVER_SWITCHES))):
+                                  ('switch', DISCOVER_SWITCHES),
+                                  ('alarm_control_panel', DISCOVER_ALARMS),
+                                  ('lock', DISCOVER_LOCKS))):
         component = get_component(comp_name)
         _LOGGER.info(config[DOMAIN])
         bootstrap.setup_component(hass, component.DOMAIN, config)
@@ -134,24 +109,10 @@ def setup(hass, config):
     return True
 
 
-def get_alarm_status():
-    ''' return a list of status overviews for alarm components '''
-    return STATUS[MY_PAGES.DEVICE_ALARM]
-
-
-def get_climate_status():
-    ''' return a list of status overviews for alarm components '''
-    return STATUS[MY_PAGES.DEVICE_CLIMATE]
-
-
-def get_smartplug_status():
-    ''' return a list of status overviews for alarm components '''
-    return STATUS[MY_PAGES.DEVICE_SMARTPLUG]
-
-
 def reconnect():
-    ''' reconnect to verisure mypages '''
+    """ Reconnect to verisure mypages. """
     try:
+        time.sleep(1)
         MY_PAGES.login()
     except VERISURE_LOGIN_ERROR as ex:
         _LOGGER.error("Could not login to Verisure mypages, %s", ex)
@@ -162,19 +123,36 @@ def reconnect():
 
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
-def update():
-    ''' Updates the status of verisure components '''
-    if WRONG_PASSWORD_GIVEN:
-        # Is there any way to inform user?
-        return
+def update_alarm():
+    """ Updates the status of alarms. """
+    update_component(MY_PAGES.alarm.get, ALARM_STATUS)
 
+
+@Throttle(MIN_TIME_BETWEEN_REQUESTS)
+def update_climate():
+    """ Updates the status of climate sensors. """
+    update_component(MY_PAGES.climate.get, CLIMATE_STATUS)
+
+
+@Throttle(MIN_TIME_BETWEEN_REQUESTS)
+def update_smartplug():
+    """ Updates the status of smartplugs. """
+    update_component(MY_PAGES.smartplug.get, SMARTPLUG_STATUS)
+
+
+def update_lock():
+    """ Updates the status of alarms. """
+    update_component(MY_PAGES.lock.get, LOCK_STATUS)
+
+
+def update_component(get_function, status):
+    """ Updates the status of verisure components. """
+    if WRONG_PASSWORD_GIVEN:
+        _LOGGER.error('Wrong password')
+        return
     try:
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_ALARM):
-            STATUS[MY_PAGES.DEVICE_ALARM][overview.id] = overview
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_CLIMATE):
-            STATUS[MY_PAGES.DEVICE_CLIMATE][overview.id] = overview
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_SMARTPLUG):
-            STATUS[MY_PAGES.DEVICE_SMARTPLUG][overview.id] = overview
-    except ConnectionError as ex:
+        for overview in get_function():
+            status[overview.id] = overview
+    except (ConnectionError, VERISURE_ERROR) as ex:
         _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
         reconnect()

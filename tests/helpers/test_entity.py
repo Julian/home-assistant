@@ -34,14 +34,6 @@ class TestHelpersEntity(unittest.TestCase):
             ATTR_HIDDEN,
             self.hass.states.get(self.entity.entity_id).attributes)
 
-    def test_setting_hidden_to_true(self):
-        self.entity.hidden = True
-        self.entity.update_ha_state()
-
-        state = self.hass.states.get(self.entity.entity_id)
-
-        self.assertTrue(state.attributes.get(ATTR_HIDDEN))
-
     def test_overwriting_hidden_property_to_true(self):
         """ Test we can overwrite hidden property to True. """
         entity.Entity.overwrite_attribute(self.entity.entity_id,
@@ -51,13 +43,7 @@ class TestHelpersEntity(unittest.TestCase):
         state = self.hass.states.get(self.entity.entity_id)
         self.assertTrue(state.attributes.get(ATTR_HIDDEN))
 
-    def test_overwriting_hidden_property_to_false(self):
-        """ Test we can overwrite hidden property to True. """
-        entity.Entity.overwrite_attribute(self.entity.entity_id,
-                                          [ATTR_HIDDEN], [False])
-        self.entity.hidden = True
-        self.entity.update_ha_state()
-
-        self.assertNotIn(
-            ATTR_HIDDEN,
-            self.hass.states.get(self.entity.entity_id).attributes)
+    def test_split_entity_id(self):
+        """ Test split_entity_id. """
+        self.assertEqual(['domain', 'object_id'],
+                         entity.split_entity_id('domain.object_id'))

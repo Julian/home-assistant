@@ -3,51 +3,9 @@ homeassistant.components.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus sensors.
 
-Configuration:
-To use the Modbus sensors you will need to add something like the following to
-your config/configuration.yaml
-
-sensor:
-    platform: modbus
-    slave: 1
-    registers:
-        16:
-            name: My integer sensor
-            unit: C
-        24:
-            bits:
-                0:
-                    name: My boolean sensor
-                2:
-                    name: My other boolean sensor
-    coils:
-        0:
-            name: My coil switch
-
-Variables:
-
-slave
-*Required
-Slave number (ignored and can be omitted if not serial Modbus).
-
-unit
-*Required
-Unit to attach to value (optional, ignored for boolean sensors).
-
-registers
-*Required
-Contains a list of relevant registers to read from. It can contain a
-"bits" section, listing relevant bits.
-
-coils
-*Optional
-Contains a list of relevant coils to read from.
-
-Note:
-- Each named register will create an integer sensor.
-- Each named bit will create a boolean sensor.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.modbus/
 """
-
 import logging
 
 import homeassistant.components.modbus as modbus
@@ -61,7 +19,7 @@ DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Read config and create Modbus devices """
+    """ Read config and create Modbus devices. """
     sensors = []
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
@@ -97,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ModbusSensor(Entity):
     # pylint: disable=too-many-arguments
-    """ Represents a Modbus Sensor """
+    """ Represents a Modbus Sensor. """
 
     def __init__(self, name, slave, register, bit=None, unit=None, coil=False):
         self._name = name
@@ -113,8 +71,10 @@ class ModbusSensor(Entity):
 
     @property
     def should_poll(self):
-        """ We should poll, because slaves are not allowed to
-            initiate communication on Modbus networks"""
+        """
+        We should poll, because slaves are not allowed to
+        initiate communication on Modbus networks.
+        """
         return True
 
     @property

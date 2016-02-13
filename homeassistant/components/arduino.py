@@ -4,40 +4,16 @@ components.arduino
 Arduino component that connects to a directly attached Arduino board which
 runs with the Firmata firmware.
 
-Configuration:
-
-To use the Arduino board you will need to add something like the following
-to your config/configuration.yaml
-
-arduino:
-    port: /dev/ttyACM0
-
-Variables:
-
-port
-*Required
-The port where is your board connected to your Home Assistant system.
-If you are using an original Arduino the port will be named ttyACM*. The exact
-number can be determined with 'ls /dev/ttyACM*' or check your 'dmesg'/
-'journalctl -f' output. Keep in mind that Arduino clones are often using a
-different name for the port (e.g. '/dev/ttyUSB*').
-
-A word of caution: The Arduino is not storing states. This means that with
-every initialization the pins are set to off/low.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/arduino/
 """
 import logging
-
-try:
-    from PyMata.pymata import PyMata
-except ImportError:
-    PyMata = None
 
 from homeassistant.helpers import validate_config
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "arduino"
-DEPENDENCIES = []
 REQUIREMENTS = ['PyMata==2.07a']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
@@ -46,18 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup the Arduino component. """
 
-    global PyMata  # pylint: disable=invalid-name
-    if PyMata is None:
-        from PyMata.pymata import PyMata as PyMata_
-        PyMata = PyMata_
-
-    import serial
-
     if not validate_config(config,
                            {DOMAIN: ['port']},
                            _LOGGER):
         return False
 
+    import serial
     global BOARD
     try:
         BOARD = ArduinoBoard(config[DOMAIN]['port'])
@@ -86,6 +56,7 @@ class ArduinoBoard(object):
     """ Represents an Arduino board. """
 
     def __init__(self, port):
+        from PyMata.pymata import PyMata
         self._port = port
         self._board = PyMata(self._port, verbose=False)
 

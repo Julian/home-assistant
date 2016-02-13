@@ -1,50 +1,28 @@
-# -*- coding: utf-8 -*-
 """
 homeassistant.components.sensor.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT sensor.
 
-This generic sensor implementation uses the MQTT message payload
-as the sensor value. If messages in this state_topic are published
-with RETAIN flag, the sensor will receive an instant update with
-last known value. Otherwise, the initial state will be undefined.
-
-sensor:
-  platform: mqtt
-  name: "MQTT Sensor"
-  state_topic: "home/bedroom/temperature"
-  unit_of_measurement: "ºC"
-
-Variables:
-
-name
-*Optional
-The name of the sensor. Default is 'MQTT Sensor'.
-
-state_topic
-*Required
-The MQTT topic subscribed to receive sensor values.
-
-unit_of_measurement
-*Optional
-Defines the units of measurement of the sensor, if any.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.mqtt/
 """
-
 import logging
+from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import template
 import homeassistant.components.mqtt as mqtt
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Sensor"
+DEFAULT_QOS = 0
 
 DEPENDENCIES = ['mqtt']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add MQTT Sensor """
+    """ Add MQTT Sensor. """
 
     if config.get('state_topic') is None:
         _LOGGER.error("Missing required variable: state_topic")
@@ -54,24 +32,32 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         hass,
         config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
-        config.get('unit_of_measurement'))])
+        config.get('qos', DEFAULT_QOS),
+        config.get('unit_of_measurement'),
+        config.get(CONF_VALUE_TEMPLATE))])
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
-    """ Represents a sensor that can be updated using MQTT """
-    def __init__(self, hass, name, state_topic, unit_of_measurement):
-        self._state = "-"
+    """ Represents a sensor that can be updated using MQTT. """
+    def __init__(self, hass, name, state_topic, qos, unit_of_measurement,
+                 value_template):
+        self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
+        self._qos = qos
         self._unit_of_measurement = unit_of_measurement
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
+            if value_template is not None:
+                payload = template.render_with_possible_json_value(
+                    hass, value_template, payload)
             self._state = payload
             self.update_ha_state()
 
-        mqtt.subscribe(hass, self._state_topic, message_received)
+        mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):

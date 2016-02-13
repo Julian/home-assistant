@@ -1,40 +1,10 @@
 """
 homeassistant.components.sensor.dht
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adafruit DHT temperature and humidity sensor.
-You need a Python3 compatible version of the Adafruit_Python_DHT library
-(e.g. https://github.com/mala-zaba/Adafruit_Python_DHT,
-also see requirements.txt).
-As this requires access to the GPIO, you will need to run home-assistant
-as root.
 
-Configuration:
-
-To use the Adafruit DHT sensor you will need to
-add something like the following to your config/configuration.yaml:
-
-sensor:
-  platform: dht
-  sensor: DHT22
-  pin: 23
-  monitored_conditions:
-    - temperature
-    - humidity
-
-Variables:
-
-sensor
-*Required
-The sensor type, DHT11, DHT22 or AM2302
-
-pin
-*Required
-The pin the sensor is connected to, something like
-'P8_11' for Beaglebone, '23' for Raspberry Pi
-
-monitored_conditions
-*Optional
-Conditions to monitor. Available conditions are temperature and humidity.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.dht/
 """
 import logging
 from datetime import timedelta
@@ -44,13 +14,16 @@ from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 # update this requirement to upstream as soon as it supports python3
-REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/' +
-                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip']
+REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
+                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip'
+                '#Adafruit_DHT==1.1.0']
+
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
-    'temperature': ['Temperature', ''],
+    'temperature': ['Temperature', None],
     'humidity': ['Humidity', '%']
 }
+DEFAULT_NAME = "DHT Sensor"
 # Return cached results if last scan was less then this time ago
 # DHT11 is able to deliver data once per second, DHT22 once every two
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
@@ -59,15 +32,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the DHT sensor. """
 
-    try:
-        import Adafruit_DHT
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import Adafruit_DHT. "
-            "Did you maybe not install the 'Adafruit_DHT' package?")
-
-        return False
+    # pylint: disable=import-error
+    import Adafruit_DHT
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
@@ -88,12 +54,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
+    name = config.get('name', DEFAULT_NAME)
+
     try:
         for variable in config['monitored_conditions']:
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(DHTSensor(data, variable, unit))
+                dev.append(DHTSensor(data, variable, unit, name))
     except KeyError:
         pass
 
@@ -102,11 +70,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class DHTSensor(Entity):
-
     """ Implements an DHT sensor. """
 
-    def __init__(self, dht_client, sensor_type, temp_unit):
-        self.client_name = 'DHT sensor'
+    def __init__(self, dht_client, sensor_type, temp_unit, name):
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.dht_client = dht_client
         self.temp_unit = temp_unit
@@ -144,7 +111,6 @@ class DHTSensor(Entity):
 
 
 class DHTClient(object):
-
     """ Gets the latest data from the DHT sensor. """
 
     def __init__(self, adafruit_dht, sensor, pin):

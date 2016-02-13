@@ -9,10 +9,12 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
-import os
-import sys
-import logging
 from collections import defaultdict
+import logging
+import logging.handlers
+import os
+import shutil
+import sys
 
 import homeassistant.core as core
 import homeassistant.util.dt as date_util
@@ -22,9 +24,10 @@ import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
+    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
@@ -33,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = 'component'
 
 PLATFORM_FORMAT = '{}.{}'
+ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
 def setup_component(hass, domain, config=None):
@@ -61,7 +65,7 @@ def setup_component(hass, domain, config=None):
 
 def _handle_requirements(hass, component, name):
     """ Installs requirements for component. """
-    if not hasattr(component, 'REQUIREMENTS'):
+    if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
 
     for req in component.REQUIREMENTS:
@@ -79,7 +83,7 @@ def _setup_component(hass, domain, config):
         return True
     component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in component.DEPENDENCIES
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
                     if dep not in hass.config.components]
 
     if missing_deps:
@@ -103,7 +107,7 @@ def _setup_component(hass, domain, config):
 
     # Assumption: if a component does not depend on groups
     # it communicates with devices
-    if group.DOMAIN not in component.DEPENDENCIES:
+    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
         hass.pool.add_worker()
 
     hass.bus.fire(
@@ -122,6 +126,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
     # Not found
     if platform is None:
+        _LOGGER.error('Unable to find platform %s', platform_path)
         return None
 
     # Already loaded
@@ -129,14 +134,13 @@ def prepare_setup_platform(hass, config, domain, platform_name):
         return platform
 
     # Load dependencies
-    if hasattr(platform, 'DEPENDENCIES'):
-        for component in platform.DEPENDENCIES:
-            if not setup_component(hass, component, config):
-                _LOGGER.error(
-                    'Unable to prepare setup for platform %s because '
-                    'dependency %s could not be initialized', platform_path,
-                    component)
-                return None
+    for component in getattr(platform, 'DEPENDENCIES', []):
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because '
+                'dependency %s could not be initialized', platform_path,
+                component)
+            return None
 
     if not _handle_requirements(hass, platform, platform_path):
         return None
@@ -151,7 +155,8 @@ def mount_local_lib_path(config_dir):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, daemon=False):
+                     verbose=False, daemon=False, skip_pip=False,
+                     log_rotate_days=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -164,10 +169,16 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    process_ha_config_upgrade(hass)
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
-        enable_logging(hass, verbose, daemon)
+        enable_logging(hass, verbose, daemon, log_rotate_days)
+
+    hass.config.skip_pip = skip_pip
+    if skip_pip:
+        _LOGGER.warning('Skipping pip installation of required modules. '
+                        'This may cause issues.')
 
     _ensure_loader_prepared(hass)
 
@@ -178,8 +189,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         dict, {key: value or {} for key, value in config.items()})
 
     # Filter out the repeating and common config section [homeassistant]
-    components = (key for key in config.keys()
-                  if ' ' not in key and key != core.DOMAIN)
+    components = set(key.split(' ')[0] for key in config.keys()
+                     if key != core.DOMAIN)
 
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
@@ -189,6 +200,10 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     _LOGGER.info('Home Assistant core initialized')
 
+    # give event decorators access to HASS
+    event_decorators.HASS = hass
+    service.HASS = hass
+
     # Setup the components
     for domain in loader.load_order_components(components):
         _setup_component(hass, domain, config)
@@ -196,7 +211,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False, daemon=False):
+def from_config_file(config_path, hass=None, verbose=False, daemon=False,
+                     skip_pip=True, log_rotate_days=None):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -210,14 +226,15 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False):
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, daemon)
+    enable_logging(hass, verbose, daemon, log_rotate_days)
 
-    config_dict = config_util.load_config_file(config_path)
+    config_dict = config_util.load_yaml_config_file(config_path)
 
-    return from_config_dict(config_dict, hass, enable_log=False)
+    return from_config_dict(config_dict, hass, enable_log=False,
+                            skip_pip=skip_pip)
 
 
-def enable_logging(hass, verbose=False, daemon=False):
+def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
     """ Setup the logging for home assistant. """
     if not daemon:
         logging.basicConfig(level=logging.INFO)
@@ -242,7 +259,7 @@ def enable_logging(hass, verbose=False, daemon=False):
                 "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path('home-assistant.log')
+    err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
@@ -250,8 +267,12 @@ def enable_logging(hass, verbose=False, daemon=False):
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
        (not err_path_exists and os.access(hass.config.config_dir, os.W_OK)):
 
-        err_handler = logging.FileHandler(
-            err_log_path, mode='w', delay=True)
+        if log_rotate_days:
+            err_handler = logging.handlers.TimedRotatingFileHandler(
+                err_log_path, when='midnight', backupCount=log_rotate_days)
+        else:
+            err_handler = logging.FileHandler(
+                err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(
@@ -259,11 +280,36 @@ def enable_logging(hass, verbose=False, daemon=False):
                               datefmt='%y-%m-%d %H:%M:%S'))
         logger = logging.getLogger('')
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)  # this sets the minimum log level
+        logger.setLevel(logging.INFO)
 
     else:
         _LOGGER.error(
             'Unable to setup error log %s (access denied)', err_log_path)
+
+
+def process_ha_config_upgrade(hass):
+    """ Upgrade config if necessary. """
+    version_path = hass.config.path('.HA_VERSION')
+
+    try:
+        with open(version_path, 'rt') as inp:
+            conf_version = inp.readline().strip()
+    except FileNotFoundError:
+        # Last version to not have this file
+        conf_version = '0.7.7'
+
+    if conf_version == __version__:
+        return
+
+    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
+                 __version__)
+
+    lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
+
+    with open(version_path, 'wt') as outp:
+        outp.write(__version__)
 
 
 def process_ha_core_config(hass, config):
@@ -283,11 +329,15 @@ def process_ha_core_config(hass, config):
         else:
             _LOGGER.error('Received invalid time zone %s', time_zone_str)
 
-    for key, attr in ((CONF_LATITUDE, 'latitude'),
-                      (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name')):
+    for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
+                           (CONF_LONGITUDE, 'longitude', float),
+                           (CONF_NAME, 'location_name', str)):
         if key in config:
-            setattr(hac, attr, config[key])
+            try:
+                setattr(hac, attr, typ(config[key]))
+            except ValueError:
+                _LOGGER.error('Received invalid %s value for %s: %s',
+                              typ.__name__, key, attr)
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 

@@ -1,8 +1,9 @@
 """
 homeassistant.components.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects to a Wink hub and loads relevant components to control its devices.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/wink/
 """
 import logging
 
@@ -12,16 +13,16 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
-    ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
+    ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "wink"
-DEPENDENCIES = []
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/' +
-                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip']
+REQUIREMENTS = ['python-wink==0.5.0']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
+DISCOVER_LOCKS = "wink.locks"
+DISCOVER_GARAGE_DOORS = "wink.garage_doors"
 
 
 def setup(hass, config):
@@ -37,8 +38,13 @@ def setup(hass, config):
     # Load components for the devices in the Wink that we support
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
-            ('switch', pywink.get_switches, DISCOVER_SWITCHES),
-            ('sensor', pywink.get_sensors, DISCOVER_SENSORS)):
+            ('switch', lambda: pywink.get_switches or
+             pywink.get_sirens or
+             pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
+            ('sensor', lambda: pywink.get_sensors or
+             pywink.get_eggtrays, DISCOVER_SENSORS),
+            ('lock', pywink.get_locks, DISCOVER_LOCKS),
+            ('garage_door', pywink.get_garage_doors, DISCOVER_GARAGE_DOORS)):
 
         if func_exists():
             component = get_component(component_name)
@@ -56,7 +62,7 @@ def setup(hass, config):
 
 
 class WinkToggleDevice(ToggleEntity):
-    """ Represents a Wink switch within Home Assistant. """
+    """ Represents a Wink toogle (switch) device. """
 
     def __init__(self, wink):
         self.wink = wink
@@ -64,7 +70,7 @@ class WinkToggleDevice(ToggleEntity):
     @property
     def unique_id(self):
         """ Returns the id of this Wink switch. """
-        return "{}.{}".format(self.__class__, self.wink.deviceId())
+        return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
@@ -76,21 +82,14 @@ class WinkToggleDevice(ToggleEntity):
         """ True if light is on. """
         return self.wink.state()
 
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.wink.name()
-        }
-
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        self.wink.setState(True)
+        self.wink.set_state(True)
 
     def turn_off(self):
         """ Turns the switch off. """
-        self.wink.setState(False)
+        self.wink.set_state(False)
 
     def update(self):
         """ Update state of the light. """
-        self.wink.updateState()
+        self.wink.update_state()

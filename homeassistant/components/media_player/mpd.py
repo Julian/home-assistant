@@ -1,46 +1,13 @@
 """
 homeassistant.components.media_player.mpd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with a Music Player Daemon.
 
-Configuration:
-
-To use MPD you will need to add something like the following to your
-config/configuration.yaml
-
-media_player:
-  platform: mpd
-  server: 127.0.0.1
-  port: 6600
-  location: bedroom
-  password: superSecretPassword123
-
-Variables:
-
-server
-*Required
-IP address of the Music Player Daemon. Example: 192.168.1.32
-
-port
-*Optional
-Port of the Music Player Daemon, defaults to 6600. Example: 6600
-
-location
-*Optional
-Location of your Music Player Daemon.
-
-password
-*Optional
-Password for your Music Player Daemon.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.mpd/
 """
 import logging
 import socket
-
-try:
-    import mpd
-except ImportError:
-    mpd = None
 
 
 from homeassistant.const import (
@@ -49,14 +16,14 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_TURN_OFF,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
+    SUPPORT_TURN_ON, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['python-mpd2==0.5.4']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 # pylint: disable=unused-argument
@@ -68,10 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     location = config.get('location', 'MPD')
     password = config.get('password', None)
 
-    global mpd  # pylint: disable=invalid-name
-    if mpd is None:
-        import mpd as mpd_
-        mpd = mpd_
+    import mpd
 
     # pylint: disable=no-member
     try:
@@ -110,6 +74,8 @@ class MpdDevice(MediaPlayerDevice):
     # pylint: disable=no-member, abstract-method
 
     def __init__(self, server, port, location, password):
+        import mpd
+
         self.server = server
         self.port = port
         self._name = location
@@ -123,6 +89,7 @@ class MpdDevice(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        import mpd
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
@@ -169,7 +136,17 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """ Title of current playing media. """
-        return self.currentsong['title']
+        name = self.currentsong.get('name', None)
+        title = self.currentsong.get('title', None)
+
+        if name is None and title is None:
+            return "None"
+        elif name is None:
+            return title
+        elif title is None:
+            return name
+        else:
+            return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):
@@ -191,8 +168,12 @@ class MpdDevice(MediaPlayerDevice):
         return SUPPORT_MPD
 
     def turn_off(self):
-        """ Service to exit the running MPD. """
+        """ Service to send the MPD the command to stop playing. """
         self.client.stop()
+
+    def turn_on(self):
+        """ Service to send the MPD the command to start playing. """
+        self.client.play()
 
     def set_volume_level(self, volume):
         """ Sets volume """

@@ -4,32 +4,8 @@ homeassistant.components.device_tracker.asuswrt
 Device tracker platform that supports scanning a ASUSWRT router for device
 presence.
 
-This device tracker needs telnet to be enabled on the router.
-
-Configuration:
-
-To use the ASUSWRT tracker you will need to add something like the following
-to your config/configuration.yaml
-
-device_tracker:
-  platform: asuswrt
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 from datetime import timedelta
@@ -63,7 +39,7 @@ _IP_NEIGH_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a DD-WRT scanner. """
+    """ Validates config and returns an ASUS-WRT scanner. """
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -75,14 +51,15 @@ def get_scanner(hass, config):
 
 
 class AsusWrtDeviceScanner(object):
-    """ This class queries a router running ASUSWRT firmware
+    """
+    This class queries a router running ASUSWRT firmware
     for connected devices. Adapted from DD-WRT scanner.
     """
 
     def __init__(self, config):
         self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.username = str(config[CONF_USERNAME])
+        self.password = str(config[CONF_PASSWORD])
 
         self.lock = threading.Lock()
 
@@ -93,8 +70,9 @@ class AsusWrtDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device IDs.
+        """
 
         self._update_info()
         return [client['mac'] for client in self.last_results]
@@ -110,8 +88,10 @@ class AsusWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the ASUSWRT router is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the ASUSWRT router is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -129,7 +109,7 @@ class AsusWrtDeviceScanner(object):
             return True
 
     def get_asuswrt_data(self):
-        """ Retrieve data from ASUSWRT and return parsed result.  """
+        """ Retrieve data from ASUSWRT and return parsed result. """
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'login: ')
@@ -153,15 +133,30 @@ class AsusWrtDeviceScanner(object):
         devices = {}
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
+
+            if not match:
+                _LOGGER.warning("Could not parse lease row: %s", lease)
+                continue
+
+            # For leases where the client doesn't set a hostname, ensure
+            # it is blank and not '*', which breaks the entity_id down
+            # the line
+            host = match.group('host')
+            if host == '*':
+                host = ''
+
             devices[match.group('ip')] = {
+                'host': host,
+                'status': '',
                 'ip': match.group('ip'),
                 'mac': match.group('mac').upper(),
-                'host': match.group('host'),
-                'status': ''
                 }
 
         for neighbor in neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
+            if not match:
+                _LOGGER.warning("Could not parse neighbor row: %s", neighbor)
+                continue
             if match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')
         return devices

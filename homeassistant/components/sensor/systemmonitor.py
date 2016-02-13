@@ -1,92 +1,38 @@
 """
 homeassistant.components.sensor.systemmonitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shows system monitor values such as: disk, memory, and processor use.
 
-Shows system monitor values such as: disk, memory and processor use
-
-Configuration:
-
-To use the System monitor sensor you will need to add something like the
-following to your config/configuration.yaml
-
-sensor:
-  platform: systemmonitor
-  resources:
-    - type: 'disk_use_percent'
-      arg: '/'
-    - type: 'disk_use'
-      arg: '/home'
-    - type: 'disk_free'
-      arg: '/'
-    - type: 'memory_use_percent'
-    - type: 'memory_use'
-    - type: 'memory_free'
-    - type: 'swap_use_percent'
-    - type: 'swap_use'
-    - type: 'swap_free'
-    - type: 'network_in'
-      arg: 'eth0'
-    - type: 'network_out'
-      arg: 'eth0'
-    - type: 'packets_in'
-      arg: 'eth0'
-    - type: 'packets_out'
-      arg: 'eth0'
-    - type: 'ipv4_address'
-      arg: 'eth0'
-    - type: 'ipv6_address'
-      arg: 'eth0'
-    - type: 'processor_use'
-    - type: 'process'
-      arg: 'octave-cli'
-    - type: 'last_boot'
-    - type: 'since_last_boot'
-
-Variables:
-
-resources
-*Required
-An array specifying the variables to monitor.
-
-These are the variables for the resources array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-sample list of variables.
-
-arg
-*Optional
-Additional details for the type, eg. path, binary name, etc.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
-import psutil
 
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['psutil==3.0.0']
+REQUIREMENTS = ['psutil==3.4.2']
 SENSOR_TYPES = {
-    'disk_use_percent': ['Disk Use', '%'],
-    'disk_use': ['Disk Use', 'GiB'],
-    'disk_free': ['Disk Free', 'GiB'],
-    'memory_use_percent': ['RAM Use', '%'],
-    'memory_use': ['RAM Use', 'MiB'],
-    'memory_free': ['RAM Free', 'MiB'],
-    'processor_use': ['CPU Use', '%'],
-    'process': ['Process', ''],
-    'swap_use_percent': ['Swap Use', '%'],
-    'swap_use': ['Swap Use', 'GiB'],
-    'swap_free': ['Swap Free', 'GiB'],
-    'network_out': ['Sent', 'MiB'],
-    'network_in': ['Recieved', 'MiB'],
-    'packets_out': ['Packets sent', ''],
-    'packets_in': ['Packets recieved', ''],
-    'ipv4_address': ['IPv4 address', ''],
-    'ipv6_address': ['IPv6 address', ''],
-    'last_boot': ['Last Boot', ''],
-    'since_last_boot': ['Since Last Boot', '']
+    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
+    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
+    'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
+    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
+    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
+    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
+    'processor_use': ['CPU Use', '%', 'mdi:memory'],
+    'process': ['Process', '', 'mdi:memory'],
+    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
+    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
+    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
+    'network_out': ['Sent', 'MiB', 'mdi:server-network'],
+    'network_in': ['Recieved', 'MiB', 'mdi:server-network'],
+    'packets_out': ['Packets sent', '', 'mdi:server-network'],
+    'packets_in': ['Packets recieved', '', 'mdi:server-network'],
+    'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
+    'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
+    'last_boot': ['Last Boot', '', 'mdi:clock'],
+    'since_last_boot': ['Since Last Boot', '', 'mdi:clock']
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +67,13 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
-        return self._name
+        """ Returns the name of the sensor. """
+        return self._name.rstrip()
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
@@ -130,10 +82,13 @@ class SystemMonitorSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
+        """ Get the latest system informations. """
+        import psutil
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == 'disk_use':

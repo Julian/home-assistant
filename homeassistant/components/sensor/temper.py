@@ -3,14 +3,8 @@ homeassistant.components.sensor.temper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for getting temperature from TEMPer devices.
 
-Configuration:
-To use the temper sensors you will need to add something like the following to
-your config/configuration.yaml
-
-Example:
-
-sensor:
-    platform: temper
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.temper/
 """
 import logging
 from homeassistant.helpers.entity import Entity
@@ -18,19 +12,15 @@ from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/' +
-                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip']
+REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
+                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
+                '#temperusb==1.2.3']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Temper sensors. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        from temperusb.temper import TemperHandler
-    except ImportError:
-        _LOGGER.error('Failed to import temperusb')
-        return False
+    from temperusb.temper import TemperHandler
 
     temp_unit = hass.config.temperature_unit
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)

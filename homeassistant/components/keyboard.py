@@ -1,11 +1,11 @@
 """
 homeassistant.components.keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to emulate keyboard presses on host machine.
-"""
-import logging
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/keyboard/
+"""
 from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -13,7 +13,6 @@ from homeassistant.const import (
 
 
 DOMAIN = "keyboard"
-DEPENDENCIES = []
 REQUIREMENTS = ['pyuserinput==0.1.9']
 
 
@@ -49,13 +48,7 @@ def media_prev_track(hass):
 
 def setup(hass, config):
     """ Listen for keyboard events. """
-    try:
-        import pykeyboard
-    except ImportError:
-        logging.getLogger(__name__).exception(
-            "Error while importing dependency PyUserInput.")
-
-        return False
+    import pykeyboard
 
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()

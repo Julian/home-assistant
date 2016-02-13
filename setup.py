@@ -1,33 +1,27 @@
+#!/usr/bin/env python3
 import os
-import re
 from setuptools import setup, find_packages
+from homeassistant.const import __version__
 
 PACKAGE_NAME = 'homeassistant'
 HERE = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(HERE, PACKAGE_NAME, 'const.py')) as fp:
-    VERSION = re.search("__version__ = ['\"]([^']+)['\"]\n", fp.read()).group(1)
-DOWNLOAD_URL = \
-    'https://github.com/balloob/home-assistant/archive/{}.zip'.format(VERSION)
+DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
+                '{}.zip'.format(__version__))
 
-PACKAGES = find_packages(exclude=['tests', 'tests.*']) + \
-    ['homeassistant.external', 'homeassistant.external.noop',
-     'homeassistant.external.nzbclients', 'homeassistant.external.vera']
-
-PACKAGE_DATA = \
-    {'homeassistant.components.frontend': ['index.html.template'],
-     'homeassistant.components.frontend.www_static': ['*.*'],
-     'homeassistant.components.frontend.www_static.images': ['*.*']}
+PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2015.4',
     'pip>=7.0.0',
+    'vincenty==0.1.3',
+    'jinja2>=2.8',
 ]
 
 setup(
     name=PACKAGE_NAME,
-    version=VERSION,
+    version=__version__,
     license='MIT License',
     url='https://home-assistant.io/',
     download_url=DOWNLOAD_URL,
@@ -36,10 +30,10 @@ setup(
     description='Open-source home automation platform running on Python 3.',
     packages=PACKAGES,
     include_package_data=True,
-    package_data=PACKAGE_DATA,
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
@@ -53,5 +47,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.4',
         'Topic :: Home Automation'
-    ]
+    ],
 )

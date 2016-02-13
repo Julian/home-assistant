@@ -1,33 +1,38 @@
 """
 homeassistant.components.media_player
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Component to interface with various media players.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/media_player/
 """
 import logging
+import os
 
 from homeassistant.components import discovery
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING,
+    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 DOMAIN = 'media_player'
-DEPENDENCIES = []
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_CAST: 'cast',
+    discovery.SERVICE_SONOS: 'sonos',
+    discovery.SERVICE_PLEX: 'plex',
 }
 
-SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
+SERVICE_PLAY_MEDIA = 'play_media'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -43,6 +48,8 @@ ATTR_MEDIA_TRACK = 'media_track'
 ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
 ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
+ATTR_MEDIA_CHANNEL = 'media_channel'
+ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
@@ -50,6 +57,9 @@ ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
 MEDIA_TYPE_VIDEO = 'movie'
+MEDIA_TYPE_EPISODE = 'episode'
+MEDIA_TYPE_CHANNEL = 'channel'
+MEDIA_TYPE_PLAYLIST = 'playlist'
 
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
@@ -57,15 +67,16 @@ SUPPORT_VOLUME_SET = 4
 SUPPORT_VOLUME_MUTE = 8
 SUPPORT_PREVIOUS_TRACK = 16
 SUPPORT_NEXT_TRACK = 32
-SUPPORT_YOUTUBE = 64
+
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
-
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
+SUPPORT_PLAY_MEDIA = 512
+SUPPORT_VOLUME_STEP = 1024
 
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
     SERVICE_TURN_OFF: 'turn_off',
+    SERVICE_TOGGLE: 'toggle',
     SERVICE_VOLUME_UP: 'volume_up',
     SERVICE_VOLUME_DOWN: 'volume_down',
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
@@ -73,6 +84,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+    SERVICE_PLAY_MEDIA: 'play_media',
 }
 
 ATTR_TO_PROPERTY = [
@@ -89,6 +101,8 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_PLAYLIST,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
@@ -113,6 +127,12 @@ def turn_off(hass, entity_id=None):
     """ Will turn off specified media player or all. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+def toggle(hass, entity_id=None):
+    """ Will toggle specified media player or all. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 def volume_up(hass, entity_id=None):
@@ -177,6 +197,23 @@ def media_previous_track(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
+def media_seek(hass, position, entity_id=None):
+    """ Send the media player the command to seek in current playing media. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_MEDIA_SEEK_POSITION] = position
+    hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
+
+
+def play_media(hass, media_type, media_id, entity_id=None):
+    """ Send the media player the command for playing media. """
+    data = {"media_type": media_type, "media_id": media_id}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+
+
 def setup(hass, config):
     """ Track states and offer events for media_players. """
     component = EntityComponent(
@@ -184,6 +221,9 @@ def setup(hass, config):
         DISCOVERY_PLATFORMS)
 
     component.setup(config)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def media_player_service_handler(service):
         """ Maps services to methods on MediaPlayerDevice. """
@@ -198,7 +238,8 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, media_player_service_handler)
+        hass.services.register(DOMAIN, service, media_player_service_handler,
+                               descriptions.get(service))
 
     def volume_set_service(service):
         """ Set specified volume on the media player. """
@@ -215,7 +256,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
+                           descriptions.get(SERVICE_VOLUME_SET))
 
     def volume_mute_service(service):
         """ Mute (true) or unmute (false) the media player. """
@@ -232,7 +274,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
+                           descriptions.get(SERVICE_VOLUME_MUTE))
 
     def media_seek_service(service):
         """ Seek to a position. """
@@ -244,37 +287,34 @@ def setup(hass, config):
         position = service.data[ATTR_MEDIA_SEEK_POSITION]
 
         for player in target_players:
-            player.seek(position)
+            player.media_seek(position)
 
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service)
+    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
+                           descriptions.get(SERVICE_MEDIA_SEEK))
 
-    def play_youtube_video_service(service, media_id=None):
+    def play_media_service(service):
         """ Plays specified media_id on the media player. """
-        if media_id is None:
-            service.data.get('video')
+        media_type = service.data.get('media_type')
+        media_id = service.data.get('media_id')
+
+        if media_type is None:
+            return
 
         if media_id is None:
             return
 
         for player in component.extract_from_service(service):
-            player.play_youtube(media_id)
+            player.play_media(media_type, media_id)
 
             if player.should_poll:
                 player.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, "start_fireplace",
-        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"))
-
-    hass.services.register(
-        DOMAIN, "start_epic_sax",
-        lambda service: play_youtube_video_service(service, "kxopViU98Xo"))
-
-    hass.services.register(
-        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service)
+        DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
+        descriptions.get(SERVICE_PLAY_MEDIA))
 
     return True
 
@@ -361,6 +401,16 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_channel(self):
+        """ Channel currently playing. """
+        return None
+
+    @property
+    def media_playlist(self):
+        """ Title of Playlist currently playing. """
+        return None
+
+    @property
     def app_id(self):
         """  ID of the current running app. """
         return None
@@ -374,11 +424,6 @@ class MediaPlayerDevice(Entity):
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
         return 0
-
-    @property
-    def device_state_attributes(self):
-        """ Extra attributes a device wants to expose. """
-        return None
 
     def turn_on(self):
         """ turn the media player on. """
@@ -416,8 +461,8 @@ class MediaPlayerDevice(Entity):
         """ Send seek command. """
         raise NotImplementedError()
 
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
+    def play_media(self, media_type, media_id):
+        """ Plays a piece of media. """
         raise NotImplementedError()
 
     # No need to overwrite these.
@@ -452,9 +497,16 @@ class MediaPlayerDevice(Entity):
         return bool(self.supported_media_commands & SUPPORT_NEXT_TRACK)
 
     @property
-    def support_youtube(self):
-        """ Boolean if YouTube is supported. """
-        return bool(self.supported_media_commands & SUPPORT_YOUTUBE)
+    def support_play_media(self):
+        """ Boolean if play media command supported. """
+        return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+
+    def toggle(self):
+        """ Toggles the power on the media player. """
+        if self.state in [STATE_OFF, STATE_IDLE]:
+            self.turn_on()
+        else:
+            self.turn_off()
 
     def volume_up(self):
         """ volume_up media player. """
@@ -483,15 +535,10 @@ class MediaPlayerDevice(Entity):
         else:
             state_attr = {
                 attr: getattr(self, attr) for attr
-                in ATTR_TO_PROPERTY if getattr(self, attr)
+                in ATTR_TO_PROPERTY if getattr(self, attr) is not None
             }
 
             if self.media_image_url:
                 state_attr[ATTR_ENTITY_PICTURE] = self.media_image_url
-
-        device_attr = self.device_state_attributes
-
-        if device_attr:
-            state_attr.update(device_attr)
 
         return state_attr

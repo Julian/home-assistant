@@ -1,7 +1,10 @@
 """
 homeassistant.components.sensor.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure sensors.
+
+For more details about this platform, please refer to the documentation at
+documentation at https://home-assistant.io/components/verisure/
 """
 import logging
 
@@ -24,22 +27,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors.extend([
         VerisureThermometer(value)
-        for value in verisure.get_climate_status().values()
+        for value in verisure.CLIMATE_STATUS.values()
         if verisure.SHOW_THERMOMETERS and
         hasattr(value, 'temperature') and value.temperature
         ])
 
     sensors.extend([
         VerisureHygrometer(value)
-        for value in verisure.get_climate_status().values()
+        for value in verisure.CLIMATE_STATUS.values()
         if verisure.SHOW_HYGROMETERS and
         hasattr(value, 'humidity') and value.humidity
-        ])
-
-    sensors.extend([
-        VerisureAlarm(value)
-        for value in verisure.get_alarm_status().values()
-        if verisure.SHOW_ALARM
         ])
 
     add_devices(sensors)
@@ -50,20 +47,19 @@ class VerisureThermometer(Entity):
 
     def __init__(self, climate_status):
         self._id = climate_status.id
-        self._device = verisure.MY_PAGES.DEVICE_CLIMATE
 
     @property
     def name(self):
         """ Returns the name of the device. """
         return '{} {}'.format(
-            verisure.STATUS[self._device][self._id].location,
+            verisure.CLIMATE_STATUS[self._id].location,
             "Temperature")
 
     @property
     def state(self):
         """ Returns the state of the device. """
         # remove ° character
-        return verisure.STATUS[self._device][self._id].temperature[:-1]
+        return verisure.CLIMATE_STATUS[self._id].temperature[:-1]
 
     @property
     def unit_of_measurement(self):
@@ -71,8 +67,8 @@ class VerisureThermometer(Entity):
         return TEMP_CELCIUS  # can verisure report in fahrenheit?
 
     def update(self):
-        ''' update sensor '''
-        verisure.update()
+        """ update sensor """
+        verisure.update_climate()
 
 
 class VerisureHygrometer(Entity):
@@ -80,20 +76,19 @@ class VerisureHygrometer(Entity):
 
     def __init__(self, climate_status):
         self._id = climate_status.id
-        self._device = verisure.MY_PAGES.DEVICE_CLIMATE
 
     @property
     def name(self):
         """ Returns the name of the device. """
         return '{} {}'.format(
-            verisure.STATUS[self._device][self._id].location,
+            verisure.CLIMATE_STATUS[self._id].location,
             "Humidity")
 
     @property
     def state(self):
         """ Returns the state of the device. """
         # remove % character
-        return verisure.STATUS[self._device][self._id].humidity[:-1]
+        return verisure.CLIMATE_STATUS[self._id].humidity[:-1]
 
     @property
     def unit_of_measurement(self):
@@ -101,27 +96,5 @@ class VerisureHygrometer(Entity):
         return "%"
 
     def update(self):
-        ''' update sensor '''
-        verisure.update()
-
-
-class VerisureAlarm(Entity):
-    """ represents a Verisure alarm status within home assistant. """
-
-    def __init__(self, alarm_status):
-        self._id = alarm_status.id
-        self._device = verisure.MY_PAGES.DEVICE_ALARM
-
-    @property
-    def name(self):
-        """ Returns the name of the device. """
-        return 'Alarm {}'.format(self._id)
-
-    @property
-    def state(self):
-        """ Returns the state of the device. """
-        return verisure.STATUS[self._device][self._id].label
-
-    def update(self):
-        ''' update sensor '''
-        verisure.update()
+        """ update sensor """
+        verisure.update_climate()
