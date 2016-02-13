@@ -6,17 +6,14 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-
 from datetime import timedelta
-from socketserver import ThreadingMixIn
 import gzip
 import io
 import json
 import logging
 import os
-import random
+from socketserver import ThreadingMixIn
 import ssl
-import string
 import threading
 import time
 
@@ -25,7 +22,6 @@ from future.moves.http.server import SimpleHTTPRequestHandler, HTTPServer
 from future.moves.urllib.parse import urlparse, parse_qs
 from future.utils import PY3
 
-from homeassistant.util import Throttle
 import homeassistant.core as ha
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN,
@@ -79,12 +75,10 @@ def setup(hass, config):
         _LOGGER.exception("Error setting up HTTP server")
         return False
 
-    def thread_for_event(event):
-        thread = threading.Thread(target=server.start)
-        thread.daemon = True
-        thread.start()
-
-    hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_START, thread_for_event)
+    hass.bus.listen_once(
+        ha.EVENT_HOMEASSISTANT_START,
+        lambda event:
+        threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
     hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
@@ -340,7 +334,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.set_session_cookie_header()
 
         if do_gzip:
-            gzip_data = _compress(inp.read())
+            gzip_data = gzip.compress(inp.read())
 
             self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
