@@ -19,7 +19,6 @@ import sys
 
 import homeassistant.core as core
 import homeassistant.util.dt as date_util
-import homeassistant.util.package as pkg_util
 import homeassistant.util.location as loc_util
 import homeassistant.config as config_util
 import homeassistant.loader as loader
