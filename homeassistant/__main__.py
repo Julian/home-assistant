@@ -82,11 +82,9 @@ def get_arguments():
     return parser.parse_args()
 
 
-def setup_and_run_hass(config_dir, args, top_process=False):
+def setup_and_run_hass(config_dir, args):
     """
-    Setup HASS and run. Block until stopped. Will assume it is running in a
-    subprocess unless top_process is set to true.
-    """
+    Setup HASS and run. Block until stopped."""
     if args.demo_mode:
         config = {
             'frontend': {},
@@ -111,39 +109,7 @@ def setup_and_run_hass(config_dir, args, top_process=False):
     hass.start()
     exit_code = int(hass.block_till_stopped())
 
-    if not top_process:
-        sys.exit(exit_code)
     return exit_code
-
-
-def run_hass_process(hass_proc):
-    """ Runs a child hass process. Returns True if it should be restarted.  """
-    requested_stop = threading.Event()
-    hass_proc.daemon = True
-
-    def request_stop(*args):
-        """ request hass stop, *args is for signal handler callback """
-        requested_stop.set()
-        hass_proc.terminate()
-
-    try:
-        signal.signal(signal.SIGTERM, request_stop)
-    except ValueError:
-        print('Could not bind to SIGTERM. Are you running in a thread?')
-
-    hass_proc.start()
-    try:
-        hass_proc.join()
-    except KeyboardInterrupt:
-        request_stop()
-        try:
-            hass_proc.join()
-        except KeyboardInterrupt:
-            return False
-
-    return (not requested_stop.isSet() and
-            hass_proc.exitcode == RESTART_EXIT_CODE,
-            hass_proc.exitcode)
 
 
 def main():
@@ -153,7 +119,7 @@ def main():
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
 
-    exit_code = setup_and_run_hass(config_dir, args, top_process=True)
+    exit_code = setup_and_run_hass(config_dir, args)
     if exit_code == RESTART_EXIT_CODE:
         sys.stderr.write('Home Assistant requested a restart\n')
     return exit_code
