@@ -11,6 +11,7 @@ DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
+    'future',
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2015.4',
@@ -33,6 +34,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    extras_require={':python_version=='2.7'': ['enum34']},
     test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
