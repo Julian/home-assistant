@@ -654,9 +654,6 @@ class Config(object):
         self.location_name = None
         self.time_zone = None
 
-        # If True, pip install is skipped for requirements on startup
-        self.skip_pip = False
-
         # List of loaded components
         self.components = []
 

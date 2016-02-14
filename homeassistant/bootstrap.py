@@ -64,20 +64,6 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(hass, component, name):
-    """ Installs requirements for component. """
-    if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
-        return True
-
-    for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('lib')):
-            _LOGGER.error('Not initializing %s because could not install '
-                          'dependency %s', name, req)
-            return False
-
-    return True
-
-
 def _setup_component(hass, domain, config):
     """ Setup a component for Home Assistant. """
     if domain in hass.config.components:
@@ -91,9 +77,6 @@ def _setup_component(hass, domain, config):
         _LOGGER.error(
             'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
-        return False
-
-    if not _handle_requirements(hass, component, domain):
         return False
 
     try:
@@ -156,8 +139,7 @@ def mount_local_lib_path(config_dir):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, daemon=False, skip_pip=False,
-                     log_rotate_days=None):
+                     verbose=False, daemon=False, log_rotate_days=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -175,11 +157,6 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     if enable_log:
         enable_logging(hass, verbose, daemon, log_rotate_days)
-
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
-        _LOGGER.warning('Skipping pip installation of required modules. '
-                        'This may cause issues.')
 
     _ensure_loader_prepared(hass)
 
@@ -213,7 +190,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
 
 def from_config_file(config_path, hass=None, verbose=False, daemon=False,
-                     skip_pip=True, log_rotate_days=None):
+                     log_rotate_days=None):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -231,8 +208,7 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
     config_dict = config_util.load_yaml_config_file(config_path)
 
-    return from_config_dict(config_dict, hass, enable_log=False,
-                            skip_pip=skip_pip)
+    return from_config_dict(config_dict, hass, enable_log=False)
 
 
 def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
