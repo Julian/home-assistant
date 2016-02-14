@@ -139,7 +139,7 @@ def mount_local_lib_path(config_dir):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, log_rotate_days=None):
+                     verbose=False):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -156,7 +156,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
-        enable_logging(hass, verbose, log_rotate_days)
+        enable_logging(hass, verbose)
 
     _ensure_loader_prepared(hass)
 
@@ -189,8 +189,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False,
-                     log_rotate_days=None):
+def from_config_file(config_path, hass=None, verbose=False):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -204,14 +203,14 @@ def from_config_file(config_path, hass=None, verbose=False,
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, log_rotate_days)
+    enable_logging(hass, verbose)
 
     config_dict = config_util.load_yaml_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False)
 
 
-def enable_logging(hass, verbose=False, log_rotate_days=None):
+def enable_logging(hass, verbose=False):
     """ Setup the logging for home assistant. """
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -243,12 +242,7 @@ def enable_logging(hass, verbose=False, log_rotate_days=None):
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
        (not err_path_exists and os.access(hass.config.config_dir, os.W_OK)):
 
-        if log_rotate_days:
-            err_handler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when='midnight', backupCount=log_rotate_days)
-        else:
-            err_handler = logging.FileHandler(
-                err_log_path, mode='w', delay=True)
+        err_handler = logging.FileHandler(err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(

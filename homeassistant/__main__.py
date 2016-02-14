@@ -83,11 +83,6 @@ def get_arguments():
         '-v', '--verbose',
         action='store_true',
         help="Enable verbose logging to file.")
-    parser.add_argument(
-        '--log-rotate-days',
-        type=int,
-        default=None,
-        help='Enables daily log rotation and keeps up to the specified days')
 
     return parser.parse_args()
 
@@ -103,14 +98,12 @@ def setup_and_run_hass(config_dir, args, top_process=False):
             'demo': {}
         }
         hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, verbose=args.verbose,
-            log_rotate_days=args.log_rotate_days)
+            config, config_dir=config_dir, verbose=args.verbose)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
-            config_file, verbose=args.verbose,
-            log_rotate_days=args.log_rotate_days)
+            config_file, verbose=args.verbose)
 
     if args.open_ui:
         def open_browser(event):
