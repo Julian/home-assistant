@@ -1,7 +1,9 @@
 Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/balloob/home-assistant|
 ===========================================================================================================
 
-Home Assistant is a home automation platform running on Python 3. The
+**This repository backports support for Python 2 (specifically for PyPy).**
+
+Home Assistant is a home automation platform running on Python. The
 goal of Home Assistant is to be able to track and control all devices at
 home and offer a platform for automating control.
 
@@ -9,7 +11,7 @@ To get started:
 
 .. code:: bash
 
-    python3 -m pip install homeassistant
+    pypy -m pip install homeassistant
     hass --open-ui
 
 Check out `the website <https://home-assistant.io>`__ for `a
