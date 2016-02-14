@@ -1,14 +1,9 @@
 """ Starts home assistant. """
 from __future__ import print_function
 
-from io import open
-from multiprocessing import Process
-import signal
-import sys
-import threading
-import os
 import argparse
-import time
+import os
+import sys
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
