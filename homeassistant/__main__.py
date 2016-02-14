@@ -71,11 +71,6 @@ def get_arguments():
         action='store_true',
         help='Start Home Assistant in demo mode')
     parser.add_argument(
-        '--debug',
-        action='store_true',
-        help='Start Home Assistant in debug mode. Runs in single process to '
-        'enable use of interactive debuggers.')
-    parser.add_argument(
         '--open-ui',
         action='store_true',
         help='Open the webinterface in a browser')
@@ -102,8 +97,7 @@ def setup_and_run_hass(config_dir, args, top_process=False):
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
-        hass = bootstrap.from_config_file(
-            config_file, verbose=args.verbose)
+        hass = bootstrap.from_config_file(config_file, verbose=args.verbose)
 
     if args.open_ui:
         def open_browser(event):
@@ -159,21 +153,9 @@ def main():
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
 
-    # Run hass in debug mode if requested
-    if args.debug:
-        sys.stderr.write('Running in debug mode. '
-                         'Home Assistant will not be able to restart.\n')
-        exit_code = setup_and_run_hass(config_dir, args, top_process=True)
-        if exit_code == RESTART_EXIT_CODE:
-            sys.stderr.write('Home Assistant requested a '
-                             'restart in debug mode.\n')
-        return exit_code
-
-    # Run hass as child process. Restart if necessary.
-    keep_running = True
-    while keep_running:
-        hass_proc = Process(target=setup_and_run_hass, args=(config_dir, args))
-        keep_running, exit_code = run_hass_process(hass_proc)
+    exit_code = setup_and_run_hass(config_dir, args, top_process=True)
+    if exit_code == RESTART_EXIT_CODE:
+        sys.stderr.write('Home Assistant requested a restart\n')
     return exit_code
 
 
