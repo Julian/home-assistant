@@ -232,17 +232,7 @@ def enable_logging(hass, verbose=False):
         _LOGGER.warning(
             "Colorlog package not found, console coloring disabled")
 
-    # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path(ERROR_LOG_FILENAME)
-    err_path_exists = os.path.isfile(err_log_path)
-
-    # Check if we can write to the error log if it exists or that
-    # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
-       (not err_path_exists and os.access(hass.config.config_dir, os.W_OK)):
-
-        err_handler = logging.FileHandler(err_log_path, mode='w', delay=True)
-
+        err_handler = logging.StreamHandler()
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
@@ -250,10 +240,6 @@ def enable_logging(hass, verbose=False):
         logger = logging.getLogger('')
         logger.addHandler(err_handler)
         logger.setLevel(logging.INFO)
-
-    else:
-        _LOGGER.error(
-            'Unable to setup error log %s (access denied)', err_log_path)
 
 
 def process_ha_config_upgrade(hass):
