@@ -92,34 +92,6 @@ def get_arguments():
     return parser.parse_args()
 
 
-def check_pid(pid_file):
-    """ Check that HA is not already running """
-    # check pid file
-    try:
-        pid = int(open(pid_file, 'r').readline())
-    except IOError:
-        # PID File does not exist
-        return
-
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        # PID does not exist
-        return
-    print('Fatal Error: HomeAssistant is already running.')
-    sys.exit(1)
-
-
-def write_pid(pid_file):
-    """ Create PID File """
-    pid = os.getpid()
-    try:
-        open(pid_file, 'w').write(str(pid))
-    except IOError:
-        print('Fatal Error: Unable to write pid file {}'.format(pid_file))
-        sys.exit(1)
-
-
 def setup_and_run_hass(config_dir, args, top_process=False):
     """
     Setup HASS and run. Block until stopped. Will assume it is running in a
