@@ -7,7 +7,6 @@ For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
 from datetime import timedelta
-import gzip
 import io
 import json
 import logging
@@ -31,6 +30,7 @@ from homeassistant.const import (
     HTTP_NOT_FOUND, HTTP_METHOD_NOT_ALLOWED, HTTP_UNPROCESSABLE_ENTITY)
 import homeassistant.remote as rem
 import homeassistant.util as util
+from homeassistant.util.compat import compress
 import homeassistant.util.dt as date_util
 import homeassistant.bootstrap as bootstrap
 
@@ -336,7 +336,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.set_session_cookie_header()
 
         if do_gzip:
-            gzip_data = gzip.compress(inp.read())
+            gzip_data = compress(inp.read())
 
             self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)

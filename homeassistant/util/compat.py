@@ -1,4 +1,23 @@
 try:
+    from gzip import compress
+except ImportError:
+    import io
+    import gzip
+
+
+    def compress(data, compresslevel=9):
+        """Compress data in one shot and return the compressed string.
+        Optional argument is the compression level, in range of 0-9.
+        """
+        buf = io.BytesIO()
+        with gzip.GzipFile(
+            fileobj=buf, mode='wb', compresslevel=compresslevel,
+        ) as f:
+            f.write(data)
+        return buf.getvalue()
+
+
+try:
     from types import MappingProxyType
 except ImportError:
     import collections
