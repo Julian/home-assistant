@@ -139,7 +139,7 @@ def mount_local_lib_path(config_dir):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, daemon=False, log_rotate_days=None):
+                     verbose=False, log_rotate_days=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -156,7 +156,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
-        enable_logging(hass, verbose, daemon, log_rotate_days)
+        enable_logging(hass, verbose, log_rotate_days)
 
     _ensure_loader_prepared(hass)
 
@@ -189,7 +189,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False, daemon=False,
+def from_config_file(config_path, hass=None, verbose=False,
                      log_rotate_days=None):
     """
     Reads the configuration file and tries to start all the required
@@ -204,36 +204,35 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, daemon, log_rotate_days)
+    enable_logging(hass, verbose, log_rotate_days)
 
     config_dict = config_util.load_yaml_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False)
 
 
-def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
+def enable_logging(hass, verbose=False, log_rotate_days=None):
     """ Setup the logging for home assistant. """
-    if not daemon:
-        logging.basicConfig(level=logging.INFO)
-        fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-               "[%(name)s] %(message)s%(reset)s")
-        try:
-            from colorlog import ColoredFormatter
-            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-                fmt,
-                datefmt='%y-%m-%d %H:%M:%S',
-                reset=True,
-                log_colors={
-                    'DEBUG': 'cyan',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red',
-                    'CRITICAL': 'red',
-                }
-            ))
-        except ImportError:
-            _LOGGER.warning(
-                "Colorlog package not found, console coloring disabled")
+    logging.basicConfig(level=logging.INFO)
+    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
+            "[%(name)s] %(message)s%(reset)s")
+    try:
+        from colorlog import ColoredFormatter
+        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+            fmt,
+            datefmt='%y-%m-%d %H:%M:%S',
+            reset=True,
+            log_colors={
+                'DEBUG': 'cyan',
+                'INFO': 'green',
+                'WARNING': 'yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'red',
+            }
+        ))
+    except ImportError:
+        _LOGGER.warning(
+            "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)

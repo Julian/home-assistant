@@ -84,11 +84,6 @@ def get_arguments():
         action='store_true',
         help="Enable verbose logging to file.")
     parser.add_argument(
-        '--pid-file',
-        metavar='path_to_pid_file',
-        default=None,
-        help='Path to PID file useful for running as daemon')
-    parser.add_argument(
         '--log-rotate-days',
         type=int,
         default=None,
@@ -105,33 +100,8 @@ def get_arguments():
         '--restart-osx',
         action='store_true',
         help='Restarts on OS X.')
-    if os.name != "nt":
-        parser.add_argument(
-            '--daemon',
-            action='store_true',
-            help='Run Home Assistant as daemon')
 
-    arguments = parser.parse_args()
-    if os.name == "nt":
-        arguments.daemon = False
-    return arguments
-
-
-def daemonize():
-    """ Move current process to daemon process """
-    # create first fork
-    pid = os.fork()
-    if pid > 0:
-        sys.exit(0)
-
-    # decouple fork
-    os.setsid()
-    os.umask(0)
-
-    # create second fork
-    pid = os.fork()
-    if pid > 0:
-        sys.exit(0)
+    return parser.parse_args()
 
 
 def check_pid(pid_file):
@@ -213,13 +183,13 @@ def setup_and_run_hass(config_dir, args, top_process=False):
             'demo': {}
         }
         hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, daemon=args.daemon,
-            verbose=args.verbose, log_rotate_days=args.log_rotate_days)
+            config, config_dir=config_dir, verbose=args.verbose,
+            log_rotate_days=args.log_rotate_days)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
-            config_file, daemon=args.daemon, verbose=args.verbose,
+            config_file, verbose=args.verbose,
             log_rotate_days=args.log_rotate_days)
 
     if args.open_ui:
@@ -289,14 +259,6 @@ def main():
         time.sleep(0.5)
         install_osx()
         return 0
-
-    # daemon functions
-    if args.pid_file:
-        check_pid(args.pid_file)
-    if args.daemon:
-        daemonize()
-    if args.pid_file:
-        write_pid(args.pid_file)
 
     # Run hass in debug mode if requested
     if args.debug:
