@@ -472,7 +472,8 @@ class Recorder(threading.Thread):
 
 def _adapt_datetime(datetimestamp):
     """ Turn a datetime into an integer for in the DB. """
-    return dt_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
+    dt = dt_util.as_utc(datetimestamp.replace(microsecond=0))
+    return (dt - datetime(1970, 1, 1, tzinfo=dt_util.UTC)).total_seconds()
 
 
 def _verify_instance():
