@@ -7,6 +7,7 @@ to query this database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
+from contextlib import closing
 import logging
 import threading
 import queue
@@ -182,30 +183,31 @@ class Recorder(threading.Thread):
 
     def run(self):
         """ Start processing events to save. """
-        self._setup_connection()
-        self._setup_run()
+        with self._make_connection():
+            self._setup_connection()
+            self._setup_run()
 
-        while True:
-            event = self.queue.get()
+            while True:
+                event = self.queue.get()
 
-            if event == self.quit_object:
-                self._close_run()
-                self._close_connection()
+                if event == self.quit_object:
+                    self._close_run()
+                    self.conn.close()
+                    self.queue.task_done()
+                    return
+
+                elif event.event_type == EVENT_TIME_CHANGED:
+                    self.queue.task_done()
+                    continue
+
+                event_id = self.record_event(event)
+
+                if event.event_type == EVENT_STATE_CHANGED:
+                    self.record_state(
+                        event.data['entity_id'], event.data.get('new_state'),
+                        event_id)
+
                 self.queue.task_done()
-                return
-
-            elif event.event_type == EVENT_TIME_CHANGED:
-                self.queue.task_done()
-                continue
-
-            event_id = self.record_event(event)
-
-            if event.event_type == EVENT_STATE_CHANGED:
-                self.record_state(
-                    event.data['entity_id'], event.data.get('new_state'),
-                    event_id)
-
-            self.queue.task_done()
 
     def event_listener(self, event):
         """
@@ -295,15 +297,14 @@ class Recorder(threading.Thread):
         """ Blocks till all events processed. """
         self.queue.join()
 
+    def _make_connection(self):
+        db_path = self.hass.config.path(DB_FILE)
+        conn = self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        return closing(conn)
+
     def _setup_connection(self):
         """ Ensure database is ready to fly. """
-        db_path = self.hass.config.path(DB_FILE)
-        self.conn = sqlite3.connect(db_path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
-
-        # Make sure the database is closed whenever Python exits
-        # without the STOP event being fired.
-        atexit.register(self._close_connection)
 
         # Have datetime objects be saved as integers
         sqlite3.register_adapter(date, _adapt_datetime)
@@ -443,12 +444,6 @@ class Recorder(threading.Thread):
                 CREATE INDEX states__significant_changes ON
                 states (domain, last_updated, entity_id)""")
             save_migration(5)
-
-    def _close_connection(self):
-        """ Close connection to the database. """
-        _LOGGER.info("Closing database")
-        atexit.unregister(self._close_connection)
-        self.conn.close()
 
     def _setup_run(self):
         """ Log the start of the current run. """
