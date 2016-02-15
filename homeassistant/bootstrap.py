@@ -125,9 +125,6 @@ def prepare_setup_platform(hass, config, domain, platform_name):
                 component)
             return None
 
-    if not _handle_requirements(hass, platform, platform_path):
-        return None
-
     return platform
 
 
