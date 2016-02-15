@@ -1,15 +1,11 @@
 sudo: false
 language: python
-cache:
-  directories:
-    - $HOME/.cache/pip
-    # - "$HOME/virtualenv/python$TRAVIS_PYTHON_VERSION"
 python:
-  - 3.4
+  - pypy
   - 3.5
 install:
-  - "true"
+  - pip install pytest -r requirements_test.txt -e .
 script:
-  - script/cibuild
+  - py.test
 matrix:
   fast_finish: true
