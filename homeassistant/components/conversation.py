@@ -22,8 +22,6 @@ ATTR_TEXT = "text"
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
-REQUIREMENTS = ['fuzzywuzzy==0.8.0']
-
 
 def setup(hass, config):
     """ Registers the process service. """
