@@ -33,7 +33,10 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
-    extras_require={':python_version=="2.7"': ['enum34']},
+    extras_require={
+        'color': ['colorlog'],
+        ':python_version=="2.7"': ['enum34'],
+    },
     test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
