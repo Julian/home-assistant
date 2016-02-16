@@ -35,6 +35,7 @@ setup(
     install_requires=REQUIRES,
     extras_require={
         'color': ['colorlog'],
+        'discovery': ['netdisco'],
         ':python_version=="2.7"': ['enum34'],
     },
     test_suite='tests',
