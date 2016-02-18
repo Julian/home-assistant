@@ -38,6 +38,7 @@ setup(
         'color': ['colorlog'],
         'conversation': ['fuzzywuzzy'],
         'discovery': ['netdisco'],
+        'sun': ['astral'],
         ':python_version=="2.7"': ['enum34'],
     },
     test_suite='tests',
