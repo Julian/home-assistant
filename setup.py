@@ -34,6 +34,7 @@ setup(
     platforms='any',
     install_requires=REQUIRES,
     extras_require={
+        'cast': ['pychromecast'],
         'color': ['colorlog'],
         'conversation': ['fuzzywuzzy'],
         'discovery': ['netdisco'],
