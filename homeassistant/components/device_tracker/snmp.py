@@ -21,7 +21,6 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp==4.2.5']
 
 CONF_COMMUNITY = "community"
 CONF_BASEOID = "baseoid"

@@ -20,7 +20,6 @@ from homeassistant.components.device_tracker import DOMAIN
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(

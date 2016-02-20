@@ -13,7 +13,6 @@ from homeassistant.const import (STATE_ON, STATE_OFF,
                                  CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 
 _LOGGING = logging.getLogger(__name__)
-REQUIREMENTS = ['hikvision==0.4']
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
 

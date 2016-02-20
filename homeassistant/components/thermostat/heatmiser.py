@@ -17,8 +17,6 @@ CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
 CONF_TSTATS = 'tstats'
 
-REQUIREMENTS = ["heatmiserV3==0.9.1"]
-
 _LOGGER = logging.getLogger(__name__)
 
 

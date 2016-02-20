@@ -13,7 +13,6 @@ from homeassistant.const import (
 
 
 DOMAIN = "keyboard"
-REQUIREMENTS = ['pyuserinput==0.1.9']
 
 
 def volume_up(hass):

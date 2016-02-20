@@ -18,8 +18,6 @@ from homeassistant.const import (
 
 DOMAIN = "tellduslive"
 
-REQUIREMENTS = ['tellive-py==0.5.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVER_SENSORS = "tellduslive.sensors"

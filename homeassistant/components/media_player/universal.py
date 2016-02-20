@@ -47,7 +47,6 @@ CONF_SERVICE_DATA = 'service_data'
 CONF_STATE = 'state'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF]
-REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -13,7 +13,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pushbullet.py==0.9.0']
 
 
 # pylint: disable=unused-argument

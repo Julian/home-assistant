@@ -21,7 +21,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_PLAYING,
     STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
 
-REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 

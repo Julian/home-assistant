@@ -26,8 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 # interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
-REQUIREMENTS = ['python-nmap==0.4.3']
-
 
 def get_scanner(hass, config):
     """ Validates config and returns a Nmap scanner. """

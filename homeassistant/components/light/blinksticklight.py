@@ -13,9 +13,6 @@ from homeassistant.components.light import Light, ATTR_RGB_COLOR
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUIREMENTS = ["blinkstick==1.1.7"]
-
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add device specified by serial number. """

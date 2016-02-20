@@ -14,7 +14,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = []
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):

@@ -13,7 +13,6 @@ from datetime import timedelta
 from homeassistant.util import Throttle
 
 DOMAIN = "apcupsd"
-REQUIREMENTS = ("apcaccess==0.0.4",)
 
 CONF_HOST = "host"
 CONF_PORT = "port"

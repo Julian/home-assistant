@@ -19,7 +19,6 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3.2']
 
 
 def get_scanner(hass, config):

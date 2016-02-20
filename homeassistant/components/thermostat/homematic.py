@@ -14,7 +14,6 @@ from xmlrpc.client import ServerProxy
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 
-REQUIREMENTS = []
 
 CONF_ADDRESS = 'address'
 CONF_DEVICES = 'devices'

@@ -16,7 +16,6 @@ from homeassistant.const import (
     ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "insteon_hub"
-REQUIREMENTS = ['insteon_hub==0.4.5']
 INSTEON = None
 DISCOVER_LIGHTS = "insteon_hub.lights"
 _LOGGER = logging.getLogger(__name__)

@@ -21,8 +21,6 @@ DEFAULT_PORT = 8125
 DEFAULT_PREFIX = 'hass'
 DEFAULT_RATE = 1
 
-REQUIREMENTS = ['python-statsd==1.7.2']
-
 CONF_HOST = 'host'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'

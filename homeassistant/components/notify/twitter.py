@@ -13,7 +13,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['TwitterAPI==2.3.6']
 
 CONF_CONSUMER_KEY = "consumer_key"
 CONF_CONSUMER_SECRET = "consumer_secret"

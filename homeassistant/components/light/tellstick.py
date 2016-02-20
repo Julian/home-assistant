@@ -9,7 +9,6 @@ https://home-assistant.io/components/light.tellstick/
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
-REQUIREMENTS = ['tellcore-py==1.1.2']
 SIGNAL_REPETITIONS = 1
 
 

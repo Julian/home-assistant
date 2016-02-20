@@ -13,7 +13,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_USERNAME, CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['freesms==0.1.0']
 
 
 def get_service(hass, config):

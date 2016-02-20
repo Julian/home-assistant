@@ -14,8 +14,6 @@ import requests
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
 
-REQUIREMENTS = ['uvcclient==0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 

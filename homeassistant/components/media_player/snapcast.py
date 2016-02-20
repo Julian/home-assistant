@@ -19,7 +19,6 @@ from homeassistant.components.media_player import (
 
 SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 DOMAIN = 'snapcast'
-REQUIREMENTS = ['snapcast==1.1.1']
 _LOGGER = logging.getLogger(__name__)
 
 

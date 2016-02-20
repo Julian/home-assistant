@@ -13,7 +13,6 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGING = logging.getLogger(__name__)
-REQUIREMENTS = ['transmissionrpc==0.11']
 
 
 # pylint: disable=unused-argument

@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
     ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
 
-REQUIREMENTS = ['phue==0.8']
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 

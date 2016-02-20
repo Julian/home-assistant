@@ -16,7 +16,6 @@ from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
 
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['limitlessled==1.0.0']
 RGB_BOUNDARY = 40
 DEFAULT_TRANSITION = 0
 DEFAULT_PORT = 8899

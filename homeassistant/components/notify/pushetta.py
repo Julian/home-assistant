@@ -15,8 +15,6 @@ from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pushetta==1.0.15']
-
 
 def get_service(hass, config):
     """ Get the Pushetta notification service. """

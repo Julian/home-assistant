@@ -16,9 +16,6 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.4']
-DEPENDENCIES = []
-
 CONF_SERVER = "server"        # server address configuration item
 CONF_BROADCAST = "broadcast"  # broadcast address configuration item
 SHORT_MAX = 65535             # short int maximum

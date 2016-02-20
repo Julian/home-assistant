@@ -12,8 +12,6 @@ from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 
-REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 

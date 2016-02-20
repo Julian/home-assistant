@@ -22,8 +22,6 @@ ATTR_VALUE1 = 'value1'
 ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
-REQUIREMENTS = ['pyfttt==0.3']
-
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
     """ Trigger a Maker IFTTT recipe. """

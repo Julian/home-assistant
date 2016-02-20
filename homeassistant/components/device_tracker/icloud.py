@@ -14,7 +14,6 @@ from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyicloud==0.7.2']
 
 CONF_INTERVAL = 'interval'
 DEFAULT_INTERVAL = 8

@@ -10,7 +10,6 @@ import logging
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 
-REQUIREMENTS = ['python-nest==2.6.0']
 DOMAIN = 'nest'
 
 NEST = None

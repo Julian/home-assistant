@@ -14,7 +14,6 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['radiotherm==1.2']
 HOLD_TEMP = 'hold_temp'
 _LOGGER = logging.getLogger(__name__)
 

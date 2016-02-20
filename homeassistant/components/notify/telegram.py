@@ -16,8 +16,6 @@ from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==3.2.0']
-
 
 def get_service(hass, config):
     """ Get the Telegram notification service. """

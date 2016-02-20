@@ -12,8 +12,6 @@ from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['mficlient==0.2.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_MODELS = [

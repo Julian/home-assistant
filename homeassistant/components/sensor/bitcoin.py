@@ -13,7 +13,6 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
     'wallet': ['Wallet balance', 'BTC'],

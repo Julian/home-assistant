@@ -11,8 +11,6 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_HOST, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['proliphix==0.1.0']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Proliphix thermostats. """

@@ -12,7 +12,6 @@ from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['eliqonline==1.0.11']
 DEFAULT_NAME = "ELIQ Energy Usage"
 
 

@@ -13,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
     'current_status': ['Status', None],
     'download_speed': ['Down Speed', 'MB/s'],

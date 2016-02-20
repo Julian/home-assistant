@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import Entity
 
 
 DOMAIN = "zigbee"
-REQUIREMENTS = ("xbee-helper==0.0.6",)
 
 CONF_DEVICE = "device"
 CONF_BAUD = "baud"

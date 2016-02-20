@@ -20,7 +20,6 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['python-mpd2==0.5.4']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK

@@ -15,7 +15,6 @@ ATTR_GAME = 'game'
 ATTR_TITLE = 'title'
 ICON = 'mdi:twitch'
 
-REQUIREMENTS = ['python-twitch==1.2.0']
 DOMAIN = 'twitch'
 
 

@@ -14,7 +14,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "arduino"
-REQUIREMENTS = ['PyMata==2.07a']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,7 +12,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import ToggleEntity
 
 SIGNAL_REPETITIONS = 1
-REQUIREMENTS = ['tellcore-py==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 

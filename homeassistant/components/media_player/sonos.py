@@ -18,8 +18,6 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
 
 
-REQUIREMENTS = ['SoCo==0.11.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 # The soco library is excessively chatty when it comes to logging and

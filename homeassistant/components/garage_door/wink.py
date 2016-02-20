@@ -11,8 +11,6 @@ import logging
 from homeassistant.components.garage_door import GarageDoorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.6.0']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
