@@ -38,6 +38,7 @@ setup(
         'color': ['colorlog'],
         'conversation': ['fuzzywuzzy'],
         'discovery': ['netdisco'],
+        'forecastio' : ['python-forecastio'],
         'sun': ['astral'],
         ':python_version=="2.7"': ['enum34'],
     },
