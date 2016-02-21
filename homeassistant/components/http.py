@@ -6,12 +6,12 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-from datetime import timedelta
+from socketserver import ThreadingMixIn
+import gzip
 import io
 import json
 import logging
 import os
-from socketserver import ThreadingMixIn
 import ssl
 import threading
 import time
@@ -21,18 +21,19 @@ from future.moves.http.server import SimpleHTTPRequestHandler, HTTPServer
 from future.moves.urllib.parse import urlparse, parse_qs
 from future.utils import PY3
 
+import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
-from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN,
-    HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
-    HTTP_HEADER_CONTENT_ENCODING, HTTP_HEADER_VARY, HTTP_HEADER_CONTENT_LENGTH,
-    HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_EXPIRES, HTTP_OK, HTTP_UNAUTHORIZED,
-    HTTP_NOT_FOUND, HTTP_METHOD_NOT_ALLOWED, HTTP_UNPROCESSABLE_ENTITY)
 import homeassistant.remote as rem
 import homeassistant.util as util
 from homeassistant.util.compat import compress
 import homeassistant.util.dt as date_util
-import homeassistant.bootstrap as bootstrap
+from homeassistant.const import (
+    CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_ACCEPT_ENCODING,
+    HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_CONTENT_ENCODING,
+    HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
+    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
+    HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
+    SERVER_PORT)
 
 DOMAIN = "http"
 

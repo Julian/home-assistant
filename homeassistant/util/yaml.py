@@ -11,7 +11,6 @@ import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
-
 _LOGGER = logging.getLogger(__name__)
 
 

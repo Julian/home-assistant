@@ -9,9 +9,9 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS)
+from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

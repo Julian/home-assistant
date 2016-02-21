@@ -8,7 +8,7 @@ https://home-assistant.io/components/thermostat.nest/
 """
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 DOMAIN = 'nest'
 

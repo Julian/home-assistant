@@ -1,13 +1,4 @@
-"""
-homeassistant.bootstrap
-~~~~~~~~~~~~~~~~~~~~~~~
-Provides methods to bootstrap a home assistant instance.
-
-Each method will return a tuple (bus, statemachine).
-
-After bootstrapping you can add your own components or
-start by calling homeassistant.start_home_assistant(bus)
-"""
+"""Provides methods to bootstrap a home assistant instance."""
 
 from collections import defaultdict
 import errno
@@ -16,22 +7,27 @@ import logging.handlers
 import os
 import shutil
 import sys
+from collections import defaultdict
+from threading import RLock
 
-import homeassistant.core as core
-import homeassistant.util.dt as date_util
-import homeassistant.util.location as loc_util
-import homeassistant.config as config_util
-import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+import homeassistant.config as config_util
+import homeassistant.core as core
+import homeassistant.loader as loader
+import homeassistant.util.dt as date_util
+import homeassistant.util.location as loc_util
+import homeassistant.util.package as pkg_util
+from homeassistant.const import (
+    CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+    CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
 from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
+_SETUP_LOCK = RLock()
+_CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
@@ -64,19 +60,20 @@ def setup_component(hass, domain, config=None):
 
 
 def _setup_component(hass, domain, config):
-    """ Setup a component for Home Assistant. """
+    """Setup a component for Home Assistant."""
+    # pylint: disable=too-many-return-statements
     if domain in hass.config.components:
         return True
-    component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                    if dep not in hass.config.components]
+    with _SETUP_LOCK:
+        # It might have been loaded while waiting for lock
+        if domain in hass.config.components:
+            return True
 
-    if missing_deps:
-        _LOGGER.error(
-            'Not initializing %s because not all dependencies loaded: %s',
-            domain, ", ".join(missing_deps))
-        return False
+        if domain in _CURRENT_SETUP:
+            _LOGGER.error('Attempt made to setup %s during setup of %s',
+                          domain, domain)
+            return False
 
     try:
         if not component.setup(hass, config):
@@ -86,17 +83,29 @@ def _setup_component(hass, domain, config):
         _LOGGER.exception('Error during setup of component %s', domain)
         return False
 
-    hass.config.components.append(component.DOMAIN)
+        _CURRENT_SETUP.append(domain)
 
-    # Assumption: if a component does not depend on groups
-    # it communicates with devices
-    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
-        hass.pool.add_worker()
+        try:
+            if not component.setup(hass, config):
+                _LOGGER.error('component %s failed to initialize', domain)
+                return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
+            return False
+        finally:
+            _CURRENT_SETUP.remove(domain)
 
-    hass.bus.fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+        hass.config.components.append(component.DOMAIN)
 
-    return True
+        # Assumption: if a component does not depend on groups
+        # it communicates with devices
+        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+            hass.pool.add_worker()
+
+        hass.bus.fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+
+        return True
 
 
 def prepare_setup_platform(hass, config, domain, platform_name):

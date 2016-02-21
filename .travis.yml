@@ -1,11 +1,12 @@
 sudo: false
 language: python
-python:
-  - pypy
-  - 3.5
-install:
-  - pip install -r requirements_test.txt -e .
-script:
-  - py.test
+python: pypy
+install: pip install tox
+script: tox
 matrix:
   fast_finish: true
+  include:
+    - python: "pypy"
+      env: TOXENV=pypy
+    - python: "3.5"
+      env: TOXENV=py35

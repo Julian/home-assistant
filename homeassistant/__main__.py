@@ -5,10 +5,10 @@ import argparse
 import os
 import sys
 
-from homeassistant import bootstrap
 import homeassistant.config as config_util
-from homeassistant.const import (__version__, EVENT_HOMEASSISTANT_START,
-                                 RESTART_EXIT_CODE)
+from homeassistant import bootstrap
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, RESTART_EXIT_CODE, __version__)
 
 
 def ensure_config_path(config_dir):

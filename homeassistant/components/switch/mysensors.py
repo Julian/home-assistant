@@ -1,21 +1,14 @@
 """
-homeassistant.components.switch.mysensors.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors.html
+https://home-assistant.io/components/switch.mysensors/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_ON, STATE_OFF)
-
 import homeassistant.components.mysensors as mysensors
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -59,7 +52,8 @@ class MySensorsSwitch(SwitchDevice):
 
     # pylint: disable=too-many-arguments
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup class attributes on instantiation.
 
         Args:
@@ -68,6 +62,7 @@ class MySensorsSwitch(SwitchDevice):
         child_id (str): Id of child.
         name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
 
         Attributes:
         gateway (GatewayWrapper): Gateway object

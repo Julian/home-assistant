@@ -4,17 +4,20 @@ tests.component.media_player.test_demo
 
 Tests demo media_player component.
 """
+from pprint import pprint
 import unittest
+
 try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
-from pprint import pprint
+
 import homeassistant.core as ha
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.media_player as mp
 
+from tests.common import get_test_home_assistant
 
 entity_id = 'media_player.walkman'
 
@@ -23,7 +26,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     """ Test the media_player module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -121,7 +124,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
                     state.attributes.get('supported_media_commands'))
 
-    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.media_seek')
+    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
+           'media_seek')
     def test_play_media(self, mock_seek):
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.living_room'
@@ -141,4 +145,3 @@ class TestDemoMediaPlayer(unittest.TestCase):
         mp.media_seek(self.hass, 100, ent_id)
         self.hass.pool.block_till_done()
         assert mock_seek.called
-

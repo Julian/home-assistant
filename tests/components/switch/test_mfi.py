@@ -1,6 +1,6 @@
 """
 tests.components.switch.test_mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mFi switch.
 """
@@ -10,10 +10,11 @@ try:
 except ImportError:
     import mock
 
-import homeassistant.core as ha
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.mfi as mfi
 from tests.components.sensor import test_mfi as test_mfi_sensor
+
+from tests.common import get_test_home_assistant
 
 
 class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
@@ -48,7 +49,7 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
 
 class TestMfiSwitch(unittest.TestCase):
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()

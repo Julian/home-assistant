@@ -1,6 +1,6 @@
 """
 tests.components.sensor.test_mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mFi sensor.
 """
@@ -10,10 +10,11 @@ try:
 except ImportError:
     import mock
 
-import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELCIUS
+
+from tests.common import get_test_home_assistant
 
 
 class TestMfiSensorSetup(unittest.TestCase):
@@ -31,7 +32,7 @@ class TestMfiSensorSetup(unittest.TestCase):
     }
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
 
@@ -90,7 +91,7 @@ class TestMfiSensorSetup(unittest.TestCase):
 
 class TestMfiSensor(unittest.TestCase):
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()

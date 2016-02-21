@@ -10,13 +10,13 @@ try:
 except ImportError:
     from mock import patch
 
-import homeassistant.core as ha
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 from homeassistant.components import alarm_control_panel
 
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import (
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 CODE = 'HELLO_CODE'
 
@@ -25,7 +25,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
     """ Test the manual alarm module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name

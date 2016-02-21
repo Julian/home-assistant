@@ -14,11 +14,11 @@ is checked to see if it contains a user provided version. If not available it
 will check the built-in components and platforms.
 """
 from future.utils import PY3
-import os
-import sys
-import pkgutil
 import importlib
 import logging
+import os
+import pkgutil
+import sys
 
 from homeassistant.util import OrderedSet
 

@@ -6,15 +6,14 @@ Provides an interface to the XBMC/Kodi JSON-RPC API
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
-from future.moves.urllib.parse import unquote, urlparse
-import urllib
+from future.moves.urllib.parse import quote_plus, unquote, urlparse
 import logging
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,12 +157,12 @@ class KodiDevice(MediaPlayerDevice):
 
     def _get_image_url(self):
         """ Helper function that parses the thumbnail URLs used by Kodi. """
-        url_components = urllib.parse.urlparse(self._item['thumbnail'])
+        url_components = urlparse(self._item['thumbnail'])
 
         if url_components.scheme == 'image':
             return '{}/image/{}'.format(
                 self._url,
-                urllib.parse.quote_plus(self._item['thumbnail']))
+                quote_plus(self._item['thumbnail']))
 
     @property
     def media_title(self):
