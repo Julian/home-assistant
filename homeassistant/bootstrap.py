@@ -17,7 +17,6 @@ import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.dt as date_util
 import homeassistant.util.location as loc_util
-import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
@@ -75,15 +74,15 @@ def _setup_component(hass, domain, config):
                           domain, domain)
             return False
 
-    try:
-        if not component.setup(hass, config):
-            _LOGGER.error('component %s failed to initialize', domain)
-            return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception('Error during setup of component %s', domain)
-        return False
-
+        component = loader.get_component(domain)
         _CURRENT_SETUP.append(domain)
+        try:
+            if not component.setup(hass, config):
+                _LOGGER.error('component %s failed to initialize', domain)
+                return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
+            return False
 
         try:
             if not component.setup(hass, config):

@@ -13,7 +13,6 @@ import signal
 import threading
 import enum
 import time
-import functools as ft
 
 import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
@@ -31,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
+from homeassistant.util.compat import MappingProxyType
 
 DOMAIN = "homeassistant"
 
