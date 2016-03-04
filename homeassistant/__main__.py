@@ -8,7 +8,11 @@ import sys
 import homeassistant.config as config_util
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, RESTART_EXIT_CODE, __version__)
+    __version__,
+    EVENT_HOMEASSISTANT_START,
+    REQUIRED_PYTHON_VER,
+    RESTART_EXIT_CODE,
+)
 
 
 def ensure_config_path(config_dir):

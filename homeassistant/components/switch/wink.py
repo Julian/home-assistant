@@ -12,6 +12,7 @@ from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
     import pywink

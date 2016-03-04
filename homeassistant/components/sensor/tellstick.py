@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.tellstick
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Shows sensor values from Tellstick sensors.
+Support for Tellstick sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tellstick/
@@ -18,7 +16,7 @@ DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up Tellstick sensors. """
+    """Sets up Tellstick sensors."""
     import tellcore.telldus as telldus
     import tellcore.constants as tellcore_constants
 
@@ -77,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TellstickSensor(Entity):
-    """ Represents a Tellstick sensor. """
+    """Represents a Tellstick sensor."""
 
     def __init__(self, name, sensor, datatype, sensor_info):
         self.datatype = datatype
@@ -88,14 +86,15 @@ class TellstickSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self.sensor.value(self.datatype).value
 
     @property
     def unit_of_measurement(self):
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement

@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
     EVENT_PLATFORM_DISCOVERED)
 
+
 DOMAIN = "discovery"
 
 SCAN_INTERVAL = 300  # seconds
@@ -26,7 +27,7 @@ SERVICE_SONOS = 'sonos'
 SERVICE_PLEX = 'plex_mediaserver'
 
 SERVICE_HANDLERS = {
-    SERVICE_WEMO: "switch",
+    SERVICE_WEMO: "wemo",
     SERVICE_CAST: "media_player",
     SERVICE_HUE: "light",
     SERVICE_NETGEAR: 'device_tracker',

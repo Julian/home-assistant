@@ -1,6 +1,6 @@
 """
-tests.components.switch.test_command_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.switch.test_command_line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command switch.
 """
@@ -35,7 +35,7 @@ class TestCommandSwitch(unittest.TestCase):
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {
-                    'platform': 'command_switch',
+                    'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
@@ -68,7 +68,7 @@ class TestCommandSwitch(unittest.TestCase):
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {
-                    'platform': 'command_switch',
+                    'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
@@ -103,7 +103,7 @@ class TestCommandSwitch(unittest.TestCase):
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {
-                    'platform': 'command_switch',
+                    'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
@@ -135,7 +135,7 @@ class TestCommandSwitch(unittest.TestCase):
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {
-                    'platform': 'command_switch',
+                    'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
