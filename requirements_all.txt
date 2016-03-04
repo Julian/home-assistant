@@ -156,9 +156,6 @@ py-cpuinfo==0.2.3
 # homeassistant.components.media_player.cast
 pychromecast==0.7.2
 
-# homeassistant.components.zwave
-pydispatcher==2.0.5
-
 # homeassistant.components.ifttt
 pyfttt==0.3
 
