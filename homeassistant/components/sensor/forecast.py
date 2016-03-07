@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
+import forecastio
+
 from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,8 +46,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Forecast.io sensor."""
-    import forecastio
-
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -129,8 +129,6 @@ class ForeCastSensor(Entity):
     # pylint: disable=too-many-branches
     def update(self):
         """Gets the latest data from Forecast.io and updates the states."""
-        import forecastio
-
         self.forecast_client.update()
         data = self.forecast_client.data
 

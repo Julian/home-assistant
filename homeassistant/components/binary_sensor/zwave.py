@@ -6,9 +6,10 @@ https://home-assistant.io/components/binary_sensor.zwave/
 """
 import logging
 import datetime
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_point_in_time
 
+from openzwave.network import ZWaveNetwork, dispatcher
+
+from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID,
     COMMAND_CLASS_SENSOR_BINARY, NETWORK,
@@ -16,6 +17,8 @@ from homeassistant.components.zwave import (
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
+import homeassistant.util.dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -67,10 +70,6 @@ class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
 
     def __init__(self, value, sensor_class):
         self._sensor_type = sensor_class
-        # pylint: disable=import-error
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         dispatcher.connect(

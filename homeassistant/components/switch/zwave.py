@@ -4,12 +4,7 @@ homeassistant.components.switch.zwave
 
 Zwave platform that handles simple binary switches.
 """
-
-try:
-    from louie import dispatcher
-except ImportError:
-    from pydispatch import dispatcher
-from openzwave.network import ZWaveNetwork
+from openzwave.network import ZWaveNetwork, dispatcher
 
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error

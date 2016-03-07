@@ -10,6 +10,8 @@ https://home-assistant.io/components/light.zwave/
 # pylint: disable=import-error
 from threading import Timer
 
+from openzwave.network import ZWaveNetwork, dispatcher
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN, Light
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SWITCH_MULTILEVEL, GENRE_USER,
@@ -51,9 +53,6 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
     """ Provides a Z-Wave dimmer. """
     # pylint: disable=too-many-arguments
     def __init__(self, value):
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._brightness, self._state = brightness_state(value)

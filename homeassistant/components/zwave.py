@@ -10,6 +10,9 @@ import os.path
 import sys
 from pprint import pprint
 
+from openzwave.option import ZWaveOption
+from openzwave.network import ZWaveNetwork, dispatcher
+
 from homeassistant import bootstrap
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
@@ -157,10 +160,6 @@ def setup(hass, config):
     """
     # pylint: disable=global-statement, import-error
     global NETWORK
-
-    from pydispatch import dispatcher
-    from openzwave.option import ZWaveOption
-    from openzwave.network import ZWaveNetwork
 
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
