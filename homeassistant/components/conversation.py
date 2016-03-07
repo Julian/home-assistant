@@ -9,6 +9,8 @@ https://home-assistant.io/components/conversation/
 import logging
 import re
 
+from fuzzywuzzy import process as fuzzyExtract
+
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
@@ -24,7 +26,6 @@ REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
 def setup(hass, config):
     """ Registers the process service. """
-    from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
 

@@ -41,7 +41,7 @@ setup(
         'blinkstick' : ["blinkstick==1.1.7"],
         'cast': ['pychromecast>=0.7.2'],
         'color': ['colorlog'],
-        'conversation': ['fuzzywuzzy'],
+        'conversation': ['fuzzywuzzy>=0.8.2'],
         'cpuspeed' : ['py-cpuinfo>=0.2.3'],
         'discovery': ['netdisco>=0.5.4'],
         'dweepy' : ['dweepy==0.2.0'],

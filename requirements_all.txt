@@ -54,7 +54,7 @@ freesms==0.1.0
 # fritzconnection==0.4.6
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.8.0
+fuzzywuzzy==0.8.2
 
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
