@@ -97,7 +97,7 @@ class HideSensitiveFilter(logging.Filter):
     # pylint: disable=too-few-public-methods
     def __init__(self, hass):
         """Initialize sensitive data filter."""
-        super().__init__()
+        super(HideSensitiveFilter, self).__init__()
         self.hass = hass
 
     def filter(self, record):
@@ -195,7 +195,7 @@ def routing_map(hass):
 
         def __init__(self, url_map, exist=True, domain=None):
             """Initilalize entity validator."""
-            super().__init__(url_map)
+            super(EntityValidator, self).__init__(url_map)
             self._exist = exist
             self._domain = domain
 
