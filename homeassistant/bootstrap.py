@@ -17,7 +17,6 @@ import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
-import homeassistant.util.package as pkg_util
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
