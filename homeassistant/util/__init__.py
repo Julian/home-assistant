@@ -1,5 +1,5 @@
 """Helper methods for various modules."""
-from collections.abc import MutableSet
+import collections
 from itertools import chain
 import threading
 import queue
@@ -11,8 +11,6 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-
-from typing import Any
 
 from .dt import as_local, utcnow
 
@@ -38,7 +36,7 @@ def slugify(text):
     return RE_SLUGIFY.sub("", text)
 
 
-def repr_helper(inp: Any) -> str:
+def repr_helper(inp):
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
@@ -130,7 +128,7 @@ class OrderedEnum(enum.Enum):
         return NotImplemented
 
 
-class OrderedSet(MutableSet):
+class OrderedSet(collections.MutableSet):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
     def __init__(self, iterable=None):

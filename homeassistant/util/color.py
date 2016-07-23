@@ -1,8 +1,7 @@
 """Color util methods."""
 import logging
 import math
-
-from typing import Tuple
+# pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,14 +36,14 @@ def color_name_to_rgb(color_name):
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
-def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
+def color_RGB_to_xy(R, G, B):
     """Convert from RGB color to XY color."""
-    if iR + iG + iB == 0:
-        return 0.0, 0.0, 0
+    if R + G + B == 0:
+        return 0, 0, 0
 
-    R = iR / 255
-    B = iB / 255
-    G = iG / 255
+    R = R / 255
+    B = B / 255
+    G = G / 255
 
     # Gamma correction
     R = pow((R + 0.055) / (1.0 + 0.055),
@@ -73,10 +72,9 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
 # taken from
 # https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
 # Copyright (c) 2014 Benjamin Knight / MIT License.
-def color_xy_brightness_to_RGB(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
+def color_xy_brightness_to_RGB(vX, vY, brightness):
     """Convert from XYZ to RGB."""
-    brightness = ibrightness / 255.
+    brightness /= 255.
     if brightness == 0:
         return (0, 0, 0)
 
@@ -108,18 +106,17 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     if max_component > 1:
         r, g, b = map(lambda x: x / max_component, [r, g, b])
 
-    ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
+    r, g, b = map(lambda x: int(x * 255), [r, g, b])
 
-    return (ir, ig, ib)
+    return (r, g, b)
 
 
-def _match_max_scale(input_colors: Tuple[int, ...],
-                     output_colors: Tuple[int, ...]) -> Tuple[int, ...]:
+def _match_max_scale(input_colors, output_colors):
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
     max_out = max(output_colors)
     if max_out == 0:
-        factor = 0.0
+        factor = 0
     else:
         factor = max_in / max_out
     return tuple(int(round(i * factor)) for i in output_colors)
@@ -179,8 +176,7 @@ def color_temperature_to_rgb(color_temperature_kelvin):
     return (red, green, blue)
 
 
-def _bound(color_component: float, minimum: float=0,
-           maximum: float=255) -> float:
+def _bound(color_component, minimum=0, maximum=255):
     """
     Bound the given color component value between the given min and max values.
 
@@ -192,7 +188,7 @@ def _bound(color_component: float, minimum: float=0,
     return min(color_component_out, maximum)
 
 
-def _get_red(temperature: float) -> float:
+def _get_red(temperature):
     """Get the red component of the temperature in RGB space."""
     if temperature <= 66:
         return 255
@@ -200,7 +196,7 @@ def _get_red(temperature: float) -> float:
     return _bound(tmp_red)
 
 
-def _get_green(temperature: float) -> float:
+def _get_green(temperature):
     """Get the green component of the given color temp in RGB space."""
     if temperature <= 66:
         green = 99.4708025861 * math.log(temperature) - 161.1195681661
@@ -209,13 +205,13 @@ def _get_green(temperature: float) -> float:
     return _bound(green)
 
 
-def _get_blue(temperature: float) -> float:
+def _get_blue(tmp_internal):
     """Get the blue component of the given color temperature in RGB space."""
-    if temperature >= 66:
+    if tmp_internal >= 66:
         return 255
-    if temperature <= 19:
+    if tmp_internal <= 19:
         return 0
-    blue = 138.5177312231 * math.log(temperature - 10) - 305.0447927307
+    blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
     return _bound(blue)
 
 

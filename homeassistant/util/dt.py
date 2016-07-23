@@ -2,13 +2,10 @@
 import datetime as dt
 import re
 
-# pylint: disable=unused-import
-from typing import Any, Union, Optional, Tuple  # NOQA
-
 import pytz
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: pytz.UTC
+UTC = DEFAULT_TIME_ZONE = pytz.utc
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -22,17 +19,16 @@ DATETIME_RE = re.compile(
 )
 
 
-def set_default_time_zone(time_zone: dt.tzinfo) -> None:
+def set_default_time_zone(time_zone):
     """Set a default time zone to be used when none is specified."""
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
-    # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
 
 
-def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
+def get_time_zone(time_zone_str):
     """Get time zone from string. Return None if unable to determine."""
     try:
         return pytz.timezone(time_zone_str)
@@ -40,17 +36,17 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
         return None
 
 
-def utcnow() -> dt.datetime:
+def utcnow():
     """Get now in UTC time."""
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo=None) -> dt.datetime:
+def now(time_zone=None):
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
-def as_utc(dattim: dt.datetime) -> dt.datetime:
+def as_utc(dattim):
     """Return a datetime as UTC time.
 
     Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE.
@@ -74,7 +70,7 @@ def as_timestamp(dt_value):
     return parsed_dt.timestamp()
 
 
-def as_local(dattim: dt.datetime) -> dt.datetime:
+def as_local(dattim):
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
@@ -84,13 +80,12 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
-def utc_from_timestamp(timestamp: float) -> dt.datetime:
+def utc_from_timestamp(timestamp):
     """Return a UTC time from a timestamp."""
     return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
-def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+def start_of_local_day(dt_or_d=None):
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         dt_or_d = now().date()
@@ -103,7 +98,7 @@ def start_of_local_day(dt_or_d:
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
-def parse_datetime(dt_str: str) -> dt.datetime:
+def parse_datetime(dt_str):
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
@@ -114,27 +109,25 @@ def parse_datetime(dt_str: str) -> dt.datetime:
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
-    kws = match.groupdict()  # type: Dict[str, Any]
+    kws = match.groupdict()
     if kws['microsecond']:
         kws['microsecond'] = kws['microsecond'].ljust(6, '0')
-    tzinfo_str = kws.pop('tzinfo')
-    if tzinfo_str == 'Z':
+    tzinfo = kws.pop('tzinfo')
+    if tzinfo == 'Z':
         tzinfo = UTC
-    elif tzinfo_str is not None:
-        offset_mins = int(tzinfo_str[-2:]) if len(tzinfo_str) > 3 else 0
-        offset_hours = int(tzinfo_str[1:3])
+    elif tzinfo is not None:
+        offset_mins = int(tzinfo[-2:]) if len(tzinfo) > 3 else 0
+        offset_hours = int(tzinfo[1:3])
         offset = dt.timedelta(hours=offset_hours, minutes=offset_mins)
-        if tzinfo_str[0] == '-':
+        if tzinfo[0] == '-':
             offset = -offset
         tzinfo = dt.timezone(offset)
-    else:
-        tzinfo = None
     kws = {k: int(v) for k, v in kws.items() if v is not None}
     kws['tzinfo'] = tzinfo
     return dt.datetime(**kws)
 
 
-def parse_date(dt_str: str) -> dt.date:
+def parse_date(dt_str):
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
@@ -161,7 +154,7 @@ def parse_time(time_str):
 
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
-def get_age(date: dt.datetime) -> str:
+def get_age(date):
     # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
@@ -171,14 +164,14 @@ def get_age(date: dt.datetime) -> str:
     be returned.
     Make sure date is not in the future, or else it won't work.
     """
-    def formatn(number: int, unit: str) -> str:
+    def formatn(number, unit):
         """Add "unit" if it's plural."""
         if number == 1:
             return "1 %s" % unit
         elif number > 1:
             return "%d %ss" % (number, unit)
 
-    def q_n_r(first: int, second: int) -> Tuple[int, int]:
+    def q_n_r(first, second):
         """Return quotient and remaining."""
         return first // second, first % second
 
@@ -203,5 +196,7 @@ def get_age(date: dt.datetime) -> str:
     minute, second = q_n_r(second, 60)
     if minute > 0:
         return formatn(minute, 'minute')
+    if second > 0:
+        return formatn(second, 'second')
 
-    return formatn(second, 'second') if second > 0 else "0 seconds"
+    return "0 second"
