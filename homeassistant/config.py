@@ -2,7 +2,6 @@
 import logging
 import os
 import shutil
-from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -68,8 +67,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_ELEVATION: vol.Coerce(int),
     CONF_TEMPERATURE_UNIT: cv.temperature_unit,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): _valid_customize,
+    vol.Required(CONF_CUSTOMIZE, default=dict): _valid_customize,
 })
 
 
