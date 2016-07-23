@@ -11,13 +11,16 @@ DOWNLOAD_URL = ('https://github.com/home-assistant/home-assistant/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
+    'cherrypy==6.1.1',
     'future',
-    'requests>=2,<3',
-    'pyyaml>=3.11,<4',
-    'pytz>=2016.6.1',
     'jinja2>=2.8',
-    'voluptuous==0.9.1',
+    'pytz>=2016.6.1',
+    'pyyaml>=3.11,<4',
+    'requests>=2,<3',
     'sqlalchemy==1.0.14',
+    'static==1.1.1',
+    'voluptuous==0.9.1',
+    'werkzeug==0.11.10',
 ]
 
 setup(
