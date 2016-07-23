@@ -18,7 +18,7 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'requests>=2,<3',
     'sqlalchemy==1.0.14',
-    'static==1.1.1',
+    'static3==0.7.0',
     'voluptuous==0.9.1',
     'werkzeug==0.11.10',
 ]
