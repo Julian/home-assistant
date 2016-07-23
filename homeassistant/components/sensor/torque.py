@@ -57,7 +57,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     # pylint: disable=too-many-arguments
     def __init__(self, hass, email, vehicle, sensors, add_devices):
         """Initialize a Torque view."""
-        super().__init__(hass)
+        super(TorqueReceiveDataView, self).__init__(hass)
         self.email = email
         self.vehicle = vehicle
         self.sensors = sensors

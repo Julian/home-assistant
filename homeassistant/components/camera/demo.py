@@ -22,7 +22,7 @@ class DemoCamera(Camera):
 
     def __init__(self, name):
         """Initialize demo camera component."""
-        super().__init__()
+        super(DemoCamera, self).__init__()
         self._name = name
 
     def camera_image(self):

@@ -51,7 +51,7 @@ class EntityTest(Entity):
         """Helper for the attributes."""
         if attr in self._values:
             return self._values[attr]
-        return getattr(super(), attr)
+        return getattr(super(EntityTest, self), attr)
 
 
 class TestHelpersEntityComponent(unittest.TestCase):

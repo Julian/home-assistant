@@ -218,7 +218,7 @@ class KNXMultiAddressDevice(KNXGroupAddress):
         """
         from knxip.core import parse_group_address, KNXException
 
-        super().__init__(self, hass, config)
+        super(KNXMultiAddressDevice, self).__init__(self, hass, config)
 
         self.config = config
 

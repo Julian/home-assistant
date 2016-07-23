@@ -71,7 +71,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             as pyHMThermostat
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMThermostat, self)._check_hm_to_ha_object():
             return False
 
         # Check if the Homematic device correct for this HA device
@@ -83,7 +83,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
-        super()._init_data_struct()
+        super(HMThermostat, self)._init_data_struct()
 
         # Add state to data dict
         self._data.update({"CONTROL_MODE": STATE_UNKNOWN,

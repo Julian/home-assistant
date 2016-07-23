@@ -37,7 +37,7 @@ class LocalFile(Camera):
 
     def __init__(self, device_info):
         """Initialize Local File Camera component."""
-        super().__init__()
+        super(LocalFile, self).__init__()
 
         self._name = device_info["name"]
         self._config = device_info

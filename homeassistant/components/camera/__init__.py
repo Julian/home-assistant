@@ -141,7 +141,7 @@ class CameraView(HomeAssistantView):
 
     def __init__(self, hass, entities):
         """Initialize a basic camera view."""
-        super().__init__(hass)
+        super(CameraView, self).__init__(hass)
         self.entities = entities
 
     def get(self, request, entity_id):

@@ -76,7 +76,7 @@ class ArestSwitchFunction(ArestSwitchBase):
 
     def __init__(self, resource, location, name, func):
         """Initialize the switch."""
-        super().__init__(resource, location, name)
+        super(ArestSwitchFunction, self).__init__(resource, location, name)
         self._func = func
 
         request = requests.get('{}/{}'.format(self._resource, self._func),
@@ -130,7 +130,7 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def __init__(self, resource, location, name, pin):
         """Initialize the switch."""
-        super().__init__(resource, location, name)
+        super(ArestSwitchPin, self).__init__(resource, location, name)
         self._pin = pin
 
         request = requests.get('{}/mode/{}/o'.format(self._resource,

@@ -270,7 +270,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
     def __init__(self, hass, config, add_devices, oauth):
         """Initialize the OAuth callback view."""
-        super().__init__(hass)
+        super(FitbitAuthCallbackView, self).__init__(hass)
         self.config = config
         self.add_devices = add_devices
         self.oauth = oauth

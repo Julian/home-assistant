@@ -30,7 +30,7 @@ class LocativeView(HomeAssistantView):
 
     def __init__(self, hass, see):
         """Initialize Locative url endpoints."""
-        super().__init__(hass)
+        super(LocativeView, self).__init__(hass)
         self.see = see
 
     def get(self, request):

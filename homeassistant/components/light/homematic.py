@@ -67,7 +67,7 @@ class HMLight(homematic.HMDevice, Light):
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMLight, self)._check_hm_to_ha_object():
             return False
 
         # Check if the Homematic device is correct for this HA device
@@ -83,7 +83,7 @@ class HMLight(homematic.HMDevice, Light):
         """Generate a data dict (self._data) from the Homematic metadata."""
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
-        super()._init_data_struct()
+        super(HMLight, self)._init_data_struct()
 
         # Use STATE
         if isinstance(self._hmdevice, Switch):

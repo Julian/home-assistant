@@ -43,7 +43,7 @@ class WinkSensorDevice(WinkDevice, Entity):
 
     def __init__(self, wink):
         """Initialize the Wink device."""
-        super().__init__(wink)
+        super(WinkSensorDevice, self).__init__(wink)
         wink = get_component('wink')
         self.capability = self.wink.capability()
         if self.wink.UNIT == "°":

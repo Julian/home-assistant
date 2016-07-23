@@ -53,7 +53,7 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
 
     def __init__(self, wink):
         """Initialize the Wink binary sensor."""
-        super().__init__(wink)
+        super(WinkBinarySensorDevice, self).__init__(wink)
         wink = get_component('wink')
         self._unit_of_measurement = self.wink.UNIT
         self.capability = self.wink.capability()

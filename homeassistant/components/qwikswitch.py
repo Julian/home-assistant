@@ -69,7 +69,7 @@ class QSToggleEntity(object):
         if value != self._value:
             self._value = value
             # pylint: disable=no-member
-            super().update_ha_state()  # Part of Entity/ToggleEntity
+            super(QSToggleEntity, self).update_ha_state()  # Part of Entity/ToggleEntity
         return self._value
 
     def turn_on(self, **kwargs):

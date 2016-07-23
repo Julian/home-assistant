@@ -61,7 +61,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             as pyHMBinarySensor
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMBinarySensor, self)._check_hm_to_ha_object():
             return False
 
         # check if the Homematic device correct for this HA device
@@ -86,7 +86,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
     def _init_data_struct(self):
         """Generate a data struct (self._data) from the Homematic metadata."""
-        super()._init_data_struct()
+        super(HMBinarySensor, self)._init_data_struct()
 
         # object have 1 binary
         if self._state is None and len(self._hmdevice.BINARYNODE) == 1:

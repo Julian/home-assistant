@@ -82,7 +82,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         from pyhomematic.devicetypes.actors import Blind
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMRollershutter, self)._check_hm_to_ha_object():
             return False
 
         # Check if the homematic device is correct for this HA device
@@ -94,7 +94,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
-        super()._init_data_struct()
+        super(HMRollershutter, self)._init_data_struct()
 
         # Add state to data dict
         self._state = "LEVEL"

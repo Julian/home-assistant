@@ -153,7 +153,7 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
 
     def __init__(self, group):
         """Initialize White group."""
-        super().__init__(group)
+        super(LimitlessLEDWhiteGroup, self).__init__(group)
         # Initialize group with known values.
         self.group.on = True
         self.group.temperature = 1.0
@@ -188,7 +188,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
 
     def __init__(self, group):
         """Initialize RGBW group."""
-        super().__init__(group)
+        super(LimitlessLEDRGBWGroup, self).__init__(group)
         # Initialize group with known values.
         self.group.on = True
         self.group.white()

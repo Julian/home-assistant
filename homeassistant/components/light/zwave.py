@@ -205,11 +205,11 @@ class ZwaveColorLight(ZwaveDimmer):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        super().__init__(value)
+        super(ZwaveColorLight, self).__init__(value)
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
-        super().update_properties()
+        super(ZwaveColorLight, self).update_properties()
 
         # Color Channels
         self._color_channels = self._value_color_channels.data
@@ -313,4 +313,4 @@ class ZwaveColorLight(ZwaveDimmer):
         else:
             self._value_color.node.set_rgbw(self._value_color.value_id, rgbw)
 
-        super().turn_on(**kwargs)
+        super(ZwaveColorLight, self).turn_on(**kwargs)

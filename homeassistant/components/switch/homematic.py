@@ -61,7 +61,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMSwitch, self)._check_hm_to_ha_object():
             return False
 
         # Check if the Homematic device is correct for this HA device
@@ -78,7 +78,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         from pyhomematic.devicetypes.actors import Dimmer,\
             Switch, SwitchPowermeter
 
-        super()._init_data_struct()
+        super(HMSwitch, self)._init_data_struct()
 
         # Use STATE
         if isinstance(self._hmdevice, Switch):

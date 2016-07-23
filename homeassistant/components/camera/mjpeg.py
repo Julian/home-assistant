@@ -34,7 +34,7 @@ class MjpegCamera(Camera):
 
     def __init__(self, device_info):
         """Initialize a MJPEG camera."""
-        super().__init__()
+        super(MjpegCamera, self).__init__()
         self._name = device_info.get('name', 'Mjpeg Camera')
         self._username = device_info.get('username')
         self._password = device_info.get('password')

@@ -51,7 +51,7 @@ class RaspberryCamera(Camera):
 
     def __init__(self, device_info):
         """Initialize Raspberry Pi camera component."""
-        super().__init__()
+        super(RaspberryCamera, self).__init__()
 
         self._name = device_info["name"]
         self._config = device_info

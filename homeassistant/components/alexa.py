@@ -40,7 +40,7 @@ class AlexaView(HomeAssistantView):
 
     def __init__(self, hass, intents):
         """Initialize Alexa view."""
-        super().__init__(hass)
+        super(AlexaView, self).__init__(hass)
 
         for name, intent in intents.items():
             if CONF_ACTION in intent:

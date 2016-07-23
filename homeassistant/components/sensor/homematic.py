@@ -75,7 +75,7 @@ class HMSensor(homematic.HMDevice):
         from pyhomematic.devicetypes.sensors import HMSensor as pyHMSensor
 
         # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
+        if not super(HMSensor, self)._check_hm_to_ha_object():
             return False
 
         # Check if the homematic device is correct for this HA device
@@ -103,7 +103,7 @@ class HMSensor(homematic.HMDevice):
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
-        super()._init_data_struct()
+        super(HMSensor, self)._init_data_struct()
 
         if self._state is None and len(self._hmdevice.SENSORNODE) == 1:
             for value in self._hmdevice.SENSORNODE:

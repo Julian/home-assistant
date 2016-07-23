@@ -143,7 +143,7 @@ class IndexView(HomeAssistantView):
 
     def __init__(self, hass, extra_urls):
         """Initialize the frontend view."""
-        super().__init__(hass)
+        super(IndexView, self).__init__(hass)
 
         from jinja2 import FileSystemLoader, Environment
 

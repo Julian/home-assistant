@@ -30,7 +30,7 @@ class HomeAssistantLogFilter(logging.Filter):
     # pylint: disable=no-init,too-few-public-methods
     def __init__(self, logfilter):
         """Initialize the filter."""
-        super().__init__()
+        super(HomeAssistantLogFilter, self).__init__()
 
         self.logfilter = logfilter
 
