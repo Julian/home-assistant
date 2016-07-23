@@ -8,5 +8,3 @@ matrix:
   include:
     - python: "pypy"
       env: TOXENV=pypy
-    - python: "3.5"
-      env: TOXENV=py35
