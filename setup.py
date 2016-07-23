@@ -95,7 +95,7 @@ setup(
         'transmission' : ['transmissionrpc==0.11'],
         'twitch' : ['python-twitch==1.3.0'],
         'twitter' : ['TwitterAPI==2.4.1'],
-        'uvc' : ['uvcclient>=0.9.0"],
+        'uvc' : ['uvcclient>=0.9.0'],
         'vera' : ['pyvera==0.2.8'],
         'verisure' : ['vsure==0.8.1'],
         'wemo' : ['pywemo>=0.3.12'],
