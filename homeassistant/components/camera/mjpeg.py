@@ -1,6 +1,4 @@
 """
-homeassistant.components.camera.mjpeg
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for IP Cameras.
 
 For more details about this platform, please refer to the documentation at
@@ -13,7 +11,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.const import HTTP_OK
 from homeassistant.helpers import validate_config
 
 CONTENT_TYPE_HEADER = 'Content-Type'
@@ -23,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Adds a mjpeg IP Camera. """
+    """Setup a MJPEG IP Camera."""
     if not validate_config({DOMAIN: config}, {DOMAIN: ['mjpeg_url']},
                            _LOGGER):
         return None
@@ -33,11 +30,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
-    """
-    A generic implementation of an IP camera that is reachable over a URL.
-    """
+    """An implementation of an IP camera that is reachable over a URL."""
 
     def __init__(self, device_info):
+        """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get('name', 'Mjpeg Camera')
         self._username = device_info.get('username')
@@ -45,21 +41,19 @@ class MjpegCamera(Camera):
         self._mjpeg_url = device_info['mjpeg_url']
 
     def camera_stream(self):
-        """ Return a mjpeg stream image response directly from the camera. """
+        """Return a MJPEG stream image response directly from the camera."""
         if self._username and self._password:
             return requests.get(self._mjpeg_url,
                                 auth=HTTPBasicAuth(self._username,
                                                    self._password),
-                                stream=True)
+                                stream=True, timeout=10)
         else:
-            return requests.get(self._mjpeg_url,
-                                stream=True)
+            return requests.get(self._mjpeg_url, stream=True, timeout=10)
 
     def camera_image(self):
-        """ Return a still image response from the camera. """
-
+        """Return a still image response from the camera."""
         def process_response(response):
-            """ Take in a response object, return the jpg from it. """
+            """Take in a response object, return the jpg from it."""
             data = b''
             for chunk in response.iter_content(1024):
                 data += chunk
@@ -72,21 +66,16 @@ class MjpegCamera(Camera):
         with closing(self.camera_stream()) as response:
             return process_response(response)
 
-    def mjpeg_stream(self, handler):
-        """ Generate an HTTP MJPEG stream from the camera. """
-        response = self.camera_stream()
-        content_type = response.headers[CONTENT_TYPE_HEADER]
-
-        handler.send_response(HTTP_OK)
-        handler.send_header(CONTENT_TYPE_HEADER, content_type)
-        handler.end_headers()
-
-        for chunk in response.iter_content(chunk_size=1024):
-            if not chunk:
-                break
-            handler.wfile.write(chunk)
+    def mjpeg_stream(self, response):
+        """Generate an HTTP MJPEG stream from the camera."""
+        stream = self.camera_stream()
+        return response(
+            stream.iter_content(chunk_size=1024),
+            mimetype=stream.headers[CONTENT_TYPE_HEADER],
+            direct_passthrough=True
+        )
 
     @property
     def name(self):
-        """ Return the name of this device. """
+        """Return the name of this camera."""
         return self._name

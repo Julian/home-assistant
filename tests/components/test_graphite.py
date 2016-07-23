@@ -1,9 +1,4 @@
-"""
-tests.components.test_graphite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests graphite feeder.
-"""
+"""The tests for the Graphite component."""
 import socket
 import unittest
 try:
@@ -22,23 +17,28 @@ from tests.common import get_test_home_assistant
 
 
 class TestGraphite(unittest.TestCase):
+    """Test the Graphite component."""
+
     def setup_method(self, method):
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
         self.gf = graphite.GraphiteFeeder(self.hass, 'foo', 123, 'ha')
 
     def teardown_method(self, method):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
     def test_minimal_config(self, mock_gf):
+        """Test setup with minimal configuration."""
         self.assertTrue(graphite.setup(self.hass, {}))
         mock_gf.assert_called_once_with(self.hass, 'localhost', 2003, 'ha')
 
     @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
     def test_full_config(self, mock_gf):
+        """Test setup with full configuration."""
         config = {
             'graphite': {
                 'host': 'foo',
@@ -51,6 +51,7 @@ class TestGraphite(unittest.TestCase):
 
     @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
     def test_config_bad_port(self, mock_gf):
+        """Test setup with invalid port."""
         config = {
             'graphite': {
                 'host': 'foo',
@@ -61,6 +62,7 @@ class TestGraphite(unittest.TestCase):
         self.assertFalse(mock_gf.called)
 
     def test_subscribe(self):
+        """Test the subscription."""
         fake_hass = mock.MagicMock()
         gf = graphite.GraphiteFeeder(fake_hass, 'foo', 123, 'ha')
         fake_hass.bus.listen_once.has_calls([
@@ -71,22 +73,26 @@ class TestGraphite(unittest.TestCase):
             EVENT_STATE_CHANGED, gf.event_listener)
 
     def test_start(self):
+        """Test the start."""
         with mock.patch.object(self.gf, 'start') as mock_start:
             self.gf.start_listen('event')
             mock_start.assert_called_once_with()
 
     def test_shutdown(self):
+        """Test the shutdown."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             self.gf.shutdown('event')
             mock_queue.put.assert_called_once_with(self.gf._quit_object)
 
     def test_event_listener(self):
+        """Test the event listener."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             self.gf.event_listener('foo')
             mock_queue.put.assert_called_once_with('foo')
 
     @mock.patch('time.time')
     def test_report_attributes(self, mock_time):
+        """Test the reporting with attributes."""
         mock_time.return_value = 12345
         attrs = {'foo': 1,
                  'bar': 2.0,
@@ -107,6 +113,7 @@ class TestGraphite(unittest.TestCase):
 
     @mock.patch('time.time')
     def test_report_with_string_state(self, mock_time):
+        """Test the reporting with strings."""
         mock_time.return_value = 12345
         expected = [
             'ha.entity.foo 1.000000 12345',
@@ -120,6 +127,7 @@ class TestGraphite(unittest.TestCase):
 
     @mock.patch('time.time')
     def test_report_with_binary_state(self, mock_time):
+        """Test the reporting with binary state."""
         mock_time.return_value = 12345
         state = ha.State('domain.entity', STATE_ON, {'foo': 1.0})
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
@@ -139,6 +147,7 @@ class TestGraphite(unittest.TestCase):
 
     @mock.patch('time.time')
     def test_send_to_graphite_errors(self, mock_time):
+        """Test the sending with errors."""
         mock_time.return_value = 12345
         state = ha.State('domain.entity', STATE_ON, {'foo': 1.0})
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
@@ -149,6 +158,7 @@ class TestGraphite(unittest.TestCase):
 
     @mock.patch('socket.socket')
     def test_send_to_graphite(self, mock_socket):
+        """Test the sending of data."""
         self.gf._send_to_graphite('foo')
         mock_socket.assert_called_once_with(socket.AF_INET,
                                             socket.SOCK_STREAM)
@@ -159,6 +169,7 @@ class TestGraphite(unittest.TestCase):
         sock.close.assert_called_once_with()
 
     def test_run_stops(self):
+        """Test the stops."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             mock_queue.get.return_value = self.gf._quit_object
             self.assertEqual(None, self.gf.run())
@@ -166,6 +177,7 @@ class TestGraphite(unittest.TestCase):
             mock_queue.task_done.assert_called_once_with()
 
     def test_run(self):
+        """Test the running."""
         runs = []
         event = mock.MagicMock(event_type=EVENT_STATE_CHANGED,
                                data={'entity_id': 'entity',

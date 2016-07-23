@@ -1,9 +1,4 @@
-"""
-tests.helpers.test_entity_component
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the entity component helper.
-"""
+"""The tests for the Entity component helper."""
 # pylint: disable=protected-access,too-many-public-methods
 from collections import OrderedDict
 import logging
@@ -17,7 +12,7 @@ import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import discovery
+from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -28,7 +23,10 @@ DOMAIN = "test_domain"
 
 
 class EntityTest(Entity):
+    """Test for the Entity component."""
+
     def __init__(self, **values):
+        """Initialize an entity."""
         self._values = values
 
         if 'entity_id' in values:
@@ -36,24 +34,28 @@ class EntityTest(Entity):
 
     @property
     def name(self):
+        """Return the name of the entity."""
         return self._handle('name')
 
     @property
     def should_poll(self):
+        """Return the ste of the polling."""
         return self._handle('should_poll')
 
     @property
     def unique_id(self):
+        """Return the unique ID of the entity."""
         return self._handle('unique_id')
 
     def _handle(self, attr):
+        """Helper for the attributes."""
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
 
 
 class TestHelpersEntityComponent(unittest.TestCase):
-    """ Tests homeassistant.helpers.entity_component module. """
+    """Test homeassistant.helpers.entity_component module."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Initialize a test Home Assistant instance."""
@@ -64,6 +66,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         self.hass.stop()
 
     def test_setting_up_group(self):
+        """Setup the setting of a group."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')
 
@@ -90,6 +93,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             sorted(group.attributes.get('entity_id'))
 
     def test_polling_only_updates_entities_it_should_poll(self):
+        """Test the polling of only updated entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
@@ -125,6 +129,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 2 == len(self.hass.states.entity_ids())
 
     def test_not_adding_duplicate_entities(self):
+        """Test for not adding duplicate entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         assert 0 == len(self.hass.states.entity_ids())
@@ -138,6 +143,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
 
     def test_not_assigning_entity_id_if_prescribes_one(self):
+        """Test for not assigning an entity ID."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         assert 'hello.world' not in self.hass.states.entity_ids()
@@ -147,6 +153,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 'hello.world' in self.hass.states.entity_ids()
 
     def test_extract_from_service_returns_all_if_no_entity_id(self):
+        """Test the extraction of everything from service."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
         component.add_entities([
             EntityTest(name='test_1'),
@@ -160,6 +167,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
                    component.extract_from_service(call))
 
     def test_extract_from_service_filter_out_non_existing_entities(self):
+        """Test the extraction of non existing entities from service."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
         component.add_entities([
             EntityTest(name='test_1'),
@@ -174,6 +182,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
                [ent.entity_id for ent in component.extract_from_service(call)]
 
     def test_setup_loads_platforms(self):
+        """Test the loading of the platforms."""
         component_setup = Mock(return_value=True)
         platform_setup = Mock(return_value=None)
         loader.set_component(
@@ -197,6 +206,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert platform_setup.called
 
     def test_setup_recovers_when_setup_raises(self):
+        """Test the setup if exceptions are happening."""
         platform1_setup = Mock(side_effect=Exception('Broken'))
         platform2_setup = Mock(return_value=None)
 
@@ -220,27 +230,25 @@ class TestHelpersEntityComponent(unittest.TestCase):
     @patch('homeassistant.helpers.entity_component.EntityComponent'
            '._setup_platform')
     def test_setup_does_discovery(self, mock_setup):
-        component = EntityComponent(
-            _LOGGER, DOMAIN, self.hass, discovery_platforms={
-                'discovery.test': 'platform_test',
-            })
+        """Test setup for discovery."""
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         component.setup({})
 
-        self.hass.bus.fire(discovery.EVENT_PLATFORM_DISCOVERED, {
-            discovery.ATTR_SERVICE: 'discovery.test',
-            discovery.ATTR_DISCOVERED: 'discovery_info',
-        })
+        discovery.load_platform(self.hass, DOMAIN, 'platform_test',
+                                {'msg': 'discovery_info'})
 
         self.hass.pool.block_till_done()
 
         assert mock_setup.called
-        assert ('platform_test', {}, 'discovery_info') == \
+        assert ('platform_test', {}, {'msg': 'discovery_info'}) == \
             mock_setup.call_args[0]
 
     @patch('homeassistant.helpers.entity_component.track_utc_time_change')
     def test_set_scan_interval_via_config(self, mock_track):
+        """Test the setting of the scan interval via configuration."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
+            """Test the platform setup."""
             add_devices([EntityTest(should_poll=True)])
 
         loader.set_component('test_domain.platform',
@@ -260,7 +268,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     @patch('homeassistant.helpers.entity_component.track_utc_time_change')
     def test_set_scan_interval_via_platform(self, mock_track):
+        """Test the setting of the scan interval via platform."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
+            """Test the platform setup."""
             add_devices([EntityTest(should_poll=True)])
 
         platform = MockPlatform(platform_setup)
@@ -278,3 +288,28 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert mock_track.called
         assert [0, 30] == list(mock_track.call_args[1]['second'])
+
+    def test_set_entity_namespace_via_config(self):
+        """Test setting an entity namespace."""
+        def platform_setup(hass, config, add_devices, discovery_info=None):
+            """Test the platform setup."""
+            add_devices([
+                EntityTest(name='beer'),
+                EntityTest(name=None),
+            ])
+
+        platform = MockPlatform(platform_setup)
+
+        loader.set_component('test_domain.platform', platform)
+
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        component.setup({
+            DOMAIN: {
+                'platform': 'platform',
+                'entity_namespace': 'yummy'
+            }
+        })
+
+        assert sorted(self.hass.states.entity_ids()) == \
+            ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']

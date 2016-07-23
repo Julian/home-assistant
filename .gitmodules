@@ -9,4 +9,4 @@
         url = https://github.com/jamespcole/home-assistant-nzb-clients.git
 [submodule "homeassistant/components/frontend/www_static/home-assistant-polymer"]
 	path = homeassistant/components/frontend/www_static/home-assistant-polymer
-	url = https://github.com/balloob/home-assistant-polymer.git
+	url = https://github.com/home-assistant/home-assistant-polymer.git

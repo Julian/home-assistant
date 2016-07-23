@@ -1,36 +1,27 @@
 """
-homeassistant.components.wemo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-WeMo device discovery.
+Support for WeMo device discovery.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wemo/
 """
 import logging
 
-from homeassistant.components import discovery
+from homeassistant.components.discovery import SERVICE_WEMO
+from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.3.12']
+REQUIREMENTS = ['pywemo==0.4.3']
 
 DOMAIN = 'wemo'
-DISCOVER_LIGHTS = 'wemo.light'
-DISCOVER_MOTION = 'wemo.motion'
-DISCOVER_SWITCHES = 'wemo.switch'
 
-# mapping from Wemo model_name to service
+# Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  DISCOVER_LIGHTS,
-    'Insight': DISCOVER_SWITCHES,
-    'Maker':   DISCOVER_SWITCHES,
-    'Motion':  DISCOVER_MOTION,
-    'Socket':  DISCOVER_SWITCHES,
-    'LightSwitch': DISCOVER_SWITCHES
-}
-WEMO_SERVICE_DISPATCH = {
-    DISCOVER_LIGHTS: 'light',
-    DISCOVER_MOTION: 'binary_sensor',
-    DISCOVER_SWITCHES: 'switch',
+    'Bridge':  'light',
+    'Insight': 'switch',
+    'Maker':   'switch',
+    'Sensor':  'binary_sensor',
+    'Socket':  'switch',
+    'LightSwitch': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -41,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
-    """Common set up for WeMo devices."""
+    """Common setup for WeMo devices."""
     import pywemo
 
     global SUBSCRIPTION_REGISTRY
@@ -66,18 +57,17 @@ def setup(hass, config):
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
 
-        service = WEMO_MODEL_DISPATCH.get(model_name) or DISCOVER_SWITCHES
-        component = WEMO_SERVICE_DISPATCH.get(service)
+        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
 
-        discovery.discover(hass, service, discovery_info,
-                           component, config)
+        discovery.load_platform(hass, component, DOMAIN, discovery_info,
+                                config)
 
-    discovery.listen(hass, discovery.SERVICE_WEMO, discovery_dispatch)
+    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     _LOGGER.info("Scanning for WeMo devices.")
     devices = [(device.host, device) for device in pywemo.discover_devices()]
 
-    # Add static devices from the config file
+    # Add static devices from the config file.
     devices.extend((address, None)
                    for address in config.get(DOMAIN, {}).get('static', []))
 
@@ -94,5 +84,5 @@ def setup(hass, config):
 
         discovery_info = (device.name, device.model_name, url, device.mac,
                           device.serialnumber)
-        discovery.discover(hass, discovery.SERVICE_WEMO, discovery_info)
+        discovery.discover(hass, SERVICE_WEMO, discovery_info)
     return True

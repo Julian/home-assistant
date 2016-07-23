@@ -1,16 +1,11 @@
 """
-homeassistant.components
-~~~~~~~~~~~~~~~~~~~~~~~~
 This package contains components that can be plugged into Home Assistant.
 
 Component design guidelines:
-
-Each component defines a constant DOMAIN that is equal to its filename.
-
-Each component that tracks states should create state entity names in the
-format "<DOMAIN>.<OBJECT_ID>".
-
-Each component should publish services only under its own domain.
+- Each component defines a constant DOMAIN that is equal to its filename.
+- Each component that tracks states should create state entity names in the
+  format "<DOMAIN>.<OBJECT_ID>".
+- Each component should publish services only under its own domain.
 """
 import itertools as it
 import logging
@@ -24,10 +19,14 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
+
 
 def is_on(hass, entity_id=None):
-    """ Loads up the module to call the is_on method.
-    If there is no entity id given we will check all. """
+    """Load up the module to call the is_on method.
+
+    If there is no entity id given we will check all.
+    """
     if entity_id:
         group = get_component('group')
 
@@ -53,7 +52,7 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None, **service_data):
-    """ Turns specified entity on if possible. """
+    """Turn specified entity on if possible."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
@@ -61,7 +60,7 @@ def turn_on(hass, entity_id=None, **service_data):
 
 
 def turn_off(hass, entity_id=None, **service_data):
-    """ Turns specified entity off. """
+    """Turn specified entity off."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
@@ -69,18 +68,22 @@ def turn_off(hass, entity_id=None, **service_data):
 
 
 def toggle(hass, entity_id=None, **service_data):
-    """ Toggles specified entity. """
+    """Toggle specified entity."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
 
 
-def setup(hass, config):
-    """ Setup general services related to homeassistant. """
+def reload_core_config(hass):
+    """Reload the core config."""
+    hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
+
+def setup(hass, config):
+    """Setup general services related to Home Assistant."""
     def handle_turn_service(service):
-        """ Method to handle calls to homeassistant.turn_on/off. """
+        """Method to handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id
@@ -114,5 +117,22 @@ def setup(hass, config):
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TOGGLE, handle_turn_service)
+
+    def handle_reload_config(call):
+        """Service handler for reloading core config."""
+        from homeassistant.exceptions import HomeAssistantError
+        from homeassistant import config as conf_util
+
+        try:
+            path = conf_util.find_config_file(hass.config.config_dir)
+            conf = conf_util.load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error(err)
+            return
+
+        conf_util.process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
+
+    hass.services.register(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG,
+                           handle_reload_config)
 
     return True

@@ -7,6 +7,7 @@ https://home-assistant.io/components/lock.wink/
 import logging
 
 from homeassistant.components.lock import LockDevice
+from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 
@@ -28,24 +29,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(WinkLockDevice(lock) for lock in pywink.get_locks())
 
 
-class WinkLockDevice(LockDevice):
-    """Represents a Wink lock."""
+class WinkLockDevice(WinkDevice, LockDevice):
+    """Representation of a Wink lock."""
+
     def __init__(self, wink):
-        self.wink = wink
-
-    @property
-    def unique_id(self):
-        """Return the id of this wink lock."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the lock if any."""
-        return self.wink.name()
-
-    def update(self):
-        """Update the state of the lock."""
-        self.wink.update_state()
+        """Initialize the lock."""
+        WinkDevice.__init__(self, wink)
 
     @property
     def is_locked(self):

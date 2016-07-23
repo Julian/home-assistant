@@ -1,27 +1,29 @@
 """
-homeassistant.components.media_player.snapcast
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to interact with Snapcast clients.
+Support for interacting with Snapcast clients.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.snapcast/
 """
-
 import logging
 import socket
 
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
+    MediaPlayerDevice)
+from homeassistant.const import (
+    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 
-SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+
+SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_SELECT_SOURCE
+
 DOMAIN = 'snapcast'
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Snapcast platform. """
+    """Setup the Snapcast platform."""
     import snapcast.control
     host = config.get('host')
     port = config.get('port', snapcast.control.CONTROL_PORT)
@@ -38,44 +40,62 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SnapcastDevice(MediaPlayerDevice):
-    """ Represents a Snapcast client device. """
+    """Representation of a Snapcast client device."""
 
     # pylint: disable=abstract-method
-
     def __init__(self, client):
+        """Initialize the Snapcast device."""
         self._client = client
 
     @property
     def name(self):
-        """ Device name. """
+        """Return the name of the device."""
         return self._client.identifier
 
     @property
     def volume_level(self):
-        """ Volume level. """
+        """Return the volume level."""
         return self._client.volume / 100
 
     @property
     def is_volume_muted(self):
-        """ Volume muted. """
+        """Volume muted."""
         return self._client.muted
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_SNAPCAST
 
     @property
     def state(self):
-        """ State of the player. """
-        if self._client.connected:
-            return STATE_ON
-        return STATE_OFF
+        """Return the state of the player."""
+        if not self._client.connected:
+            return STATE_OFF
+        return {
+            'idle': STATE_IDLE,
+            'playing': STATE_PLAYING,
+            'unkown': STATE_UNKNOWN,
+        }.get(self._client.stream.status, STATE_UNKNOWN)
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._client.stream.identifier
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._client.available_streams()
 
     def mute_volume(self, mute):
-        """ Mute status. """
+        """Send the mute command."""
         self._client.muted = mute
 
     def set_volume_level(self, volume):
-        """ Volume level. """
+        """Set the volume level."""
         self._client.volume = round(volume * 100)
+
+    def select_source(self, source):
+        """Set input source."""
+        self._client.stream = source

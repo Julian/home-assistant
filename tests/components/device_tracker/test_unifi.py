@@ -1,8 +1,4 @@
-"""
-homeassistant.components.device_tracker.unifi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Unifi WAP controller
-"""
+"""The tests for the Unifi WAP device tracker platform."""
 import unittest
 from unittest import mock
 import urllib
@@ -13,9 +9,12 @@ from unifi import controller
 
 
 class TestUnifiScanner(unittest.TestCase):
+    """Test the Unifiy platform."""
+
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_minimal(self, mock_ctrl, mock_scanner):
+        """Test the setup with minimal configuration."""
         config = {
             'device_tracker': {
                 CONF_USERNAME: 'foo',
@@ -25,29 +24,32 @@ class TestUnifiScanner(unittest.TestCase):
         result = unifi.get_scanner(None, config)
         self.assertEqual(unifi.UnifiScanner.return_value, result)
         mock_ctrl.assert_called_once_with('localhost', 'foo', 'password',
-                                          8443, 'v4')
+                                          8443, 'v4', 'default')
         mock_scanner.assert_called_once_with(mock_ctrl.return_value)
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_full(self, mock_ctrl, mock_scanner):
+        """Test the setup with full configuration."""
         config = {
             'device_tracker': {
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
                 'port': 123,
+                'site_id': 'abcdef01',
             }
         }
         result = unifi.get_scanner(None, config)
         self.assertEqual(unifi.UnifiScanner.return_value, result)
         mock_ctrl.assert_called_once_with('myhost', 'foo', 'password',
-                                          123, 'v4')
+                                          123, 'v4', 'abcdef01')
         mock_scanner.assert_called_once_with(mock_ctrl.return_value)
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_error(self, mock_ctrl, mock_scanner):
+        """Test for configuration errors."""
         config = {
             'device_tracker': {
                 CONF_HOST: 'myhost',
@@ -61,6 +63,7 @@ class TestUnifiScanner(unittest.TestCase):
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_badport(self, mock_ctrl, mock_scanner):
+        """Test the setup with a bad port."""
         config = {
             'device_tracker': {
                 CONF_USERNAME: 'foo',
@@ -76,6 +79,7 @@ class TestUnifiScanner(unittest.TestCase):
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_controller_failed(self, mock_ctrl, mock_scanner):
+        """Test for controller failure."""
         config = {
             'device_tracker': {
                 CONF_USERNAME: 'foo',
@@ -88,6 +92,7 @@ class TestUnifiScanner(unittest.TestCase):
         self.assertFalse(result)
 
     def test_scanner_update(self):
+        """Test the scanner update."""
         ctrl = mock.MagicMock()
         fake_clients = [
             {'mac': '123'},
@@ -98,12 +103,14 @@ class TestUnifiScanner(unittest.TestCase):
         ctrl.get_clients.assert_called_once_with()
 
     def test_scanner_update_error(self):
+        """Test the scanner update for error."""
         ctrl = mock.MagicMock()
         ctrl.get_clients.side_effect = urllib.error.HTTPError(
             '/', 500, 'foo', {}, None)
         unifi.UnifiScanner(ctrl)
 
     def test_scan_devices(self):
+        """Test the scanning for devices."""
         ctrl = mock.MagicMock()
         fake_clients = [
             {'mac': '123'},
@@ -114,6 +121,7 @@ class TestUnifiScanner(unittest.TestCase):
         self.assertEqual(set(['123', '234']), set(scanner.scan_devices()))
 
     def test_get_device_name(self):
+        """Test the getting of device names."""
         ctrl = mock.MagicMock()
         fake_clients = [
             {'mac': '123', 'hostname': 'foobar'},

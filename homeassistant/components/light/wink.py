@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink lights.
 
 For more details about this platform, please refer to the documentation at
@@ -8,12 +6,17 @@ https://home-assistant.io/components/light.wink/
 """
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
+    Light, ATTR_RGB_COLOR
+from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.util import color as color_util
+from homeassistant.util.color import \
+    color_temperature_mired_to_kelvin as mired_to_kelvin
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return Wink lights. """
+    """Setup Wink lights."""
     import pywink
 
     token = config.get(CONF_ACCESS_TOKEN)
@@ -31,47 +34,61 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         WinkLight(light) for light in pywink.get_bulbs())
 
 
-class WinkLight(Light):
-    """ Represents a Wink light. """
+class WinkLight(WinkDevice, Light):
+    """Representation of a Wink light."""
 
     def __init__(self, wink):
-        self.wink = wink
-
-    @property
-    def unique_id(self):
-        """ Returns the id of this Wink switch. """
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """ Returns the name of the light if any. """
-        return self.wink.name()
+        """Initialize the Wink device."""
+        WinkDevice.__init__(self, wink)
 
     @property
     def is_on(self):
-        """ True if light is on. """
+        """Return true if light is on."""
         return self.wink.state()
 
     @property
     def brightness(self):
-        """Brightness of the light."""
+        """Return the brightness of the light."""
         return int(self.wink.brightness() * 255)
+
+    @property
+    def xy_color(self):
+        """Current bulb color in CIE 1931 (XY) color space."""
+        if not self.wink.supports_xy_color():
+            return None
+        return self.wink.color_xy()
+
+    @property
+    def color_temp(self):
+        """Current bulb color in degrees Kelvin."""
+        if not self.wink.supports_temperature():
+            return None
+        return color_util.color_temperature_kelvin_to_mired(
+            self.wink.color_temperature_kelvin())
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+        color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
 
-        if brightness is not None:
-            self.wink.set_state(True, brightness=brightness / 255)
+        state_kwargs = {
+        }
 
-        else:
-            self.wink.set_state(True)
+        if rgb_color:
+            xyb = color_util.color_RGB_to_xy(*rgb_color)
+            state_kwargs['color_xy'] = xyb[0], xyb[1]
+            state_kwargs['brightness'] = xyb[2]
+
+        if color_temp_mired:
+            state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)
+
+        if brightness:
+            state_kwargs['brightness'] = brightness / 255.0
+
+        self.wink.set_state(True, **state_kwargs)
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """Turn the switch off."""
         self.wink.set_state(False)
-
-    def update(self):
-        """ Update state of the light. """
-        self.wink.update_state()

@@ -5,6 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import threading
+from collections import OrderedDict
+
+import voluptuous as vol
 
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -14,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import (
     Entity, generate_entity_id, split_entity_id)
 from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'group'
 
@@ -25,6 +29,38 @@ CONF_VIEW = 'view'
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
+
+
+def _conf_preprocess(value):
+    """Preprocess alternative configuration formats."""
+    if isinstance(value, (str, list)):
+        value = {CONF_ENTITIES: value}
+
+    return value
+
+_SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+    CONF_VIEW: bool,
+    CONF_NAME: str,
+    CONF_ICON: cv.icon,
+}))
+
+
+def _group_dict(value):
+    """Validate a dictionary of group definitions."""
+    config = OrderedDict()
+    for key, group in value.items():
+        try:
+            config[key] = _SINGLE_GROUP_CONFIG(group)
+        except vol.MultipleInvalid as ex:
+            raise vol.Invalid('Group {} is invalid: {}'.format(key, ex))
+
+    return config
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(dict, _group_dict)
+}, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
@@ -106,18 +142,12 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 
 def setup(hass, config):
-    """Set up all groups found definded in the configuration."""
+    """Setup all groups found definded in the configuration."""
     for object_id, conf in config.get(DOMAIN, {}).items():
-        if not isinstance(conf, dict):
-            conf = {CONF_ENTITIES: conf}
-
         name = conf.get(CONF_NAME, object_id)
-        entity_ids = conf.get(CONF_ENTITIES)
+        entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
-
-        if isinstance(entity_ids, str):
-            entity_ids = [ent.strip() for ent in entity_ids.split(",")]
 
         Group(hass, name, entity_ids, icon=icon, view=view,
               object_id=object_id)
@@ -129,7 +159,6 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
                  icon=None, view=False, object_id=None):
         """Initialize a group."""
@@ -160,30 +189,27 @@ class Group(Entity):
 
     @property
     def name(self):
-        """Name of the group."""
+        """Return the name of the group."""
         return self._name
 
     @property
     def state(self):
-        """State of the group."""
+        """Return the state of the group."""
         return self._state
 
     @property
     def icon(self):
-        """Icon of the group."""
+        """Return the icon of the group."""
         return self._icon
 
     @property
     def hidden(self):
-        """If group should be hidden or not.
-
-        true if group is a view or not user defined.
-        """
+        """If group should be hidden or not."""
         return not self._user_defined or self._view
 
     @property
     def state_attributes(self):
-        """State attributes for the group."""
+        """Return the state attributes for the group."""
         data = {
             ATTR_ENTITY_ID: self.tracking,
             ATTR_ORDER: self._order,
@@ -215,7 +241,7 @@ class Group(Entity):
             self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
-        """Unregisters the group from Home Assistant."""
+        """Unregister the group from Home Assistant."""
         self.hass.states.remove(self.entity_id)
 
         self.hass.bus.remove_listener(
@@ -233,7 +259,7 @@ class Group(Entity):
 
     @property
     def _tracking_states(self):
-        """States that the group is tracking."""
+        """The states that the group is tracking."""
         states = []
 
         for entity_id in self.tracking:

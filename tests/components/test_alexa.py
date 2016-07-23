@@ -1,12 +1,8 @@
-"""
-tests.components.test_alexa
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant Alexa component does what it should do.
-"""
+"""The tests for the Alexa component."""
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
 import json
+import time
+import unittest
 
 import requests
 
@@ -18,7 +14,10 @@ from tests.common import get_test_instance_port, get_test_home_assistant
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
 API_URL = "http://127.0.0.1:{}{}".format(SERVER_PORT, alexa.API_ENDPOINT)
-HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
+HA_HEADERS = {
+    const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
+    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+}
 
 SESSION_ID = 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000'
 APPLICATION_ID = 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
@@ -29,7 +28,7 @@ calls = []
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initalize a Home Assistant server for testing this module. """
+    """Initialize a Home Assistant server for testing this module."""
     global hass
 
     hass = get_test_home_assistant()
@@ -76,8 +75,8 @@ def setUpModule():   # pylint: disable=invalid-name
                     },
                     'action': {
                         'service': 'test.alexa',
-                        'data': {
-                            'hello': 1
+                        'data_template': {
+                            'hello': '{{ ZodiacSign }}'
                         },
                         'entity_id': 'switch.test',
                     }
@@ -87,10 +86,11 @@ def setUpModule():   # pylint: disable=invalid-name
     })
 
     hass.start()
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server. """
+    """Stop the Home Assistant server."""
     hass.stop()
 
 
@@ -100,12 +100,14 @@ def _req(data={}):
 
 
 class TestAlexa(unittest.TestCase):
-    """ Test Alexa. """
+    """Test Alexa."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         hass.pool.block_till_done()
 
     def test_launch_request(self):
+        """Test the launch of a request."""
         data = {
             'version': '1.0',
             'session': {
@@ -131,6 +133,7 @@ class TestAlexa(unittest.TestCase):
         self.assertIn('outputSpeech', resp['response'])
 
     def test_intent_request_with_slots(self):
+        """Test a request with slots."""
         data = {
             'version': '1.0',
             'session': {
@@ -172,6 +175,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You told us your sign is virgo.', text)
 
     def test_intent_request_with_slots_but_no_value(self):
+        """Test a request with slots but no value."""
         data = {
             'version': '1.0',
             'session': {
@@ -212,6 +216,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You told us your sign is .', text)
 
     def test_intent_request_without_slots(self):
+        """Test a request without slots."""
         data = {
             'version': '1.0',
             'session': {
@@ -258,6 +263,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You are both home, you silly', text)
 
     def test_intent_request_calling_service(self):
+        """Test a request for calling a service."""
         data = {
             'version': '1.0',
             'session': {
@@ -277,6 +283,12 @@ class TestAlexa(unittest.TestCase):
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'CallServiceIntent',
+                    'slots': {
+                        'ZodiacSign': {
+                            'name': 'ZodiacSign',
+                            'value': 'virgo',
+                        }
+                    }
                 }
             }
         }
@@ -288,9 +300,10 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('test', call.domain)
         self.assertEqual('alexa', call.service)
         self.assertEqual(['switch.test'], call.data.get('entity_id'))
-        self.assertEqual(1, call.data.get('hello'))
+        self.assertEqual('virgo', call.data.get('hello'))
 
     def test_session_ended_request(self):
+        """Test the request for ending the session."""
         data = {
             'version': '1.0',
             'session': {

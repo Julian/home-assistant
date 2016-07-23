@@ -17,21 +17,23 @@ SENSOR_TYPES = ["Temperature",
                 "Humidity",
                 "Pressure",
                 "Luminance",
-                "UVIndex"]
+                "UVIndex",
+                "Voltage"]
 
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS = {"Temperature": TEMP_FAHRENHEIT,
                 "Humidity": "%",
                 "Pressure": "inHg",
-                "Luminance": "cd/m²"}
+                "Luminance": "cd/m²",
+                "Voltage": "mV"}
 
 # Which sensors to format numerically
-FORMAT_NUMBERS = ["Temperature", "Pressure"]
+FORMAT_NUMBERS = ["Temperature", "Pressure", "Voltage"]
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the available BloomSky weather sensors."""
+    """Setup the available BloomSky weather sensors."""
     logger = logging.getLogger(__name__)
     bloomsky = get_component('bloomsky')
     sensors = config.get('monitored_conditions', SENSOR_TYPES)
@@ -47,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BloomSkySensor(Entity):
-    """Represents a single sensor in a BloomSky device."""
+    """Representation of a single sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):
         """Initialize a bloomsky sensor."""
@@ -65,12 +67,12 @@ class BloomSkySensor(Entity):
 
     @property
     def unique_id(self):
-        """Unique ID for this sensor."""
+        """Return the unique ID for this sensor."""
         return self._unique_id
 
     @property
     def state(self):
-        """The current state (i.e. value) of this sensor."""
+        """The current state, eg. value, of this sensor."""
         return self._state
 
     @property

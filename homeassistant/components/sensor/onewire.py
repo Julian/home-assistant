@@ -9,25 +9,27 @@ import os
 import time
 from glob import glob
 
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELCIUS
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-
-BASE_DIR = '/sys/bus/w1/devices/'
-DEVICE_FOLDERS = glob(os.path.join(BASE_DIR, '28*'))
-SENSOR_IDS = []
-DEVICE_FILES = []
-for device_folder in DEVICE_FOLDERS:
-    SENSOR_IDS.append(os.path.split(device_folder)[1])
-    DEVICE_FILES.append(os.path.join(device_folder, 'w1_slave'))
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the one wire Sensors."""
+    """Setup the one wire Sensors."""
+    base_dir = config.get('mount_dir', '/sys/bus/w1/devices/')
+    device_folders = glob(os.path.join(base_dir, '[10,22,28,3B,42]*'))
+    sensor_ids = []
+    device_files = []
+    for device_folder in device_folders:
+        sensor_ids.append(os.path.split(device_folder)[1])
+        if base_dir.startswith('/sys/bus/w1/devices'):
+            device_files.append(os.path.join(device_folder, 'w1_slave'))
+        else:
+            device_files.append(os.path.join(device_folder, 'temperature'))
 
-    if DEVICE_FILES == []:
+    if device_files == []:
         _LOGGER.error('No onewire sensor found.')
         _LOGGER.error('Check if dtoverlay=w1-gpio,gpiopin=4.')
         _LOGGER.error('is in your /boot/config.txt and')
@@ -35,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     devs = []
-    names = SENSOR_IDS
+    names = sensor_ids
 
     for key in config.keys():
         if key == "names":
@@ -48,17 +50,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # map names to ids.
             elif isinstance(config['names'], dict):
                 names = []
-                for sensor_id in SENSOR_IDS:
+                for sensor_id in sensor_ids:
                     names.append(config['names'].get(sensor_id, sensor_id))
-    for device_file, name in zip(DEVICE_FILES, names):
+    for device_file, name in zip(device_files, names):
         devs.append(OneWire(name, device_file))
     add_devices(devs)
 
 
 class OneWire(Entity):
-    """An One wire Sensor."""
+    """Implementation of an One wire Sensor."""
 
     def __init__(self, name, device_file):
+        """Initialize the sensor."""
         self._name = name
         self._device_file = device_file
         self._state = STATE_UNKNOWN
@@ -73,29 +76,42 @@ class OneWire(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
-        return TEMP_CELCIUS
+        """Return the unit the value is expressed in."""
+        return TEMP_CELSIUS
 
     def update(self):
-        """Gets the latest data from the device."""
-        lines = self._read_temp_raw()
-        while lines[0].strip()[-3:] != 'YES':
-            time.sleep(0.2)
+        """Get the latest data from the device."""
+        temp = -99
+        if self._device_file.startswith('/sys/bus/w1/devices'):
             lines = self._read_temp_raw()
-        equals_pos = lines[1].find('t=')
-        if equals_pos != -1:
-            temp_string = lines[1][equals_pos+2:]
-            temp = round(float(temp_string) / 1000.0, 1)
-            if temp < -55 or temp > 125:
-                return
-            self._state = temp
+            while lines[0].strip()[-3:] != 'YES':
+                time.sleep(0.2)
+                lines = self._read_temp_raw()
+            equals_pos = lines[1].find('t=')
+            if equals_pos != -1:
+                temp_string = lines[1][equals_pos+2:]
+                temp = round(float(temp_string) / 1000.0, 1)
+        else:
+            ds_device_file = open(self._device_file, 'r')
+            temp_read = ds_device_file.readlines()
+            ds_device_file.close()
+            if len(temp_read) == 1:
+                try:
+                    temp = round(float(temp_read[0]), 1)
+                except ValueError:
+                    _LOGGER.warning('Invalid temperature value read from ' +
+                                    self._device_file)
+
+        if temp < -55 or temp > 125:
+            return
+        self._state = temp

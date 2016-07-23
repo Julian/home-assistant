@@ -1,7 +1,5 @@
 """
-homeassistant.components.thermostat.heatmiser
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for the PRT Heatmiser themostats using the V3 protocol.
+Support for the PRT Heatmiser themostats using the V3 protocol.
 
 See https://github.com/andylockran/heatmiserV3 for more info on the
 heatmiserV3 module dependency.
@@ -12,7 +10,7 @@ https://home-assistant.io/components/thermostat.heatmiser/
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 
 CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
@@ -22,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the heatmiser thermostat. """
-
+    """Setup the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
 
     ipaddress = str(config[CONF_IPADDRESS])
@@ -57,10 +54,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HeatmiserV3Thermostat(ThermostatDevice):
-    """ Represents a HeatmiserV3 thermostat. """
+    """Representation of a HeatmiserV3 thermostat."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, heatmiser, device, name, serport):
+        """Initialize the thermostat."""
         self.heatmiser = heatmiser
         self.device = device
         self.serport = serport
@@ -73,17 +71,17 @@ class HeatmiserV3Thermostat(ThermostatDevice):
 
     @property
     def name(self):
-        """ Returns the name of the honeywell, if any. """
+        """Return the name of the thermostat, if any."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement this thermostat uses."""
-        return TEMP_CELCIUS
+        """Return the unit of measurement which this thermostat uses."""
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
-        """ Returns the current temperature. """
+        """Return the current temperature."""
         if self.dcb is not None:
             low = self.dcb.get("floortemplow ")
             high = self.dcb.get("floortemphigh")
@@ -95,11 +93,11 @@ class HeatmiserV3Thermostat(ThermostatDevice):
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         return self._target_temperature
 
     def set_temperature(self, temperature):
-        """ Set new target temperature """
+        """Set new target temperature."""
         temperature = int(temperature)
         self.heatmiser.hmSendAddress(
             self._id,
@@ -110,7 +108,5 @@ class HeatmiserV3Thermostat(ThermostatDevice):
         self._target_temperature = int(temperature)
 
     def update(self):
-        self.dcb = self.heatmiser.hmReadAddress(
-            self._id,
-            'prt',
-            self.serport)
+        """Get the latest data."""
+        self.dcb = self.heatmiser.hmReadAddress(self._id, 'prt', self.serport)

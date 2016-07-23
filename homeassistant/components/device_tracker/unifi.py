@@ -1,7 +1,8 @@
 """
-homeassistant.components.device_tracker.unifi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Unifi WAP controller
+Support for Unifi WAP controllers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
 import urllib
@@ -11,13 +12,15 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 
 # Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['urllib3', 'unifi==1.2.4']
+REQUIREMENTS = ['urllib3', 'unifi==1.2.5']
+
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
+CONF_SITE_ID = 'site_id'
 
 
 def get_scanner(hass, config):
-    """ Sets up unifi device_tracker """
+    """Setup Unifi device_tracker."""
     from unifi.controller import Controller
 
     if not validate_config(config, {DOMAIN: [CONF_USERNAME,
@@ -30,6 +33,7 @@ def get_scanner(hass, config):
     host = this_config.get(CONF_HOST, 'localhost')
     username = this_config.get(CONF_USERNAME)
     password = this_config.get(CONF_PASSWORD)
+    site_id = this_config.get(CONF_SITE_ID, 'default')
 
     try:
         port = int(this_config.get(CONF_PORT, 8443))
@@ -38,7 +42,7 @@ def get_scanner(hass, config):
         return False
 
     try:
-        ctrl = Controller(host, username, password, port, 'v4')
+        ctrl = Controller(host, username, password, port, 'v4', site_id)
     except urllib.error.HTTPError as ex:
         _LOGGER.error('Failed to connect to unifi: %s', ex)
         return False
@@ -50,10 +54,12 @@ class UnifiScanner(object):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller):
+        """Initialize the scanner."""
         self._controller = controller
         self._update()
 
     def _update(self):
+        """Get the clients from the device."""
         try:
             clients = self._controller.get_clients()
         except urllib.error.HTTPError as ex:
@@ -63,12 +69,12 @@ class UnifiScanner(object):
         self._clients = {client['mac']: client for client in clients}
 
     def scan_devices(self):
-        """ Scans for devices. """
+        """Scan for devices."""
         self._update()
         return self._clients.keys()
 
     def get_device_name(self, mac):
-        """ Returns the name (if known) of the device.
+        """Return the name (if known) of the device.
 
         If a name has been set in Unifi, then return that, else
         return the hostname if it has been detected.

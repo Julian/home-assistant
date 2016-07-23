@@ -1,7 +1,5 @@
 """
-components.verisure
-~~~~~~~~~~~~~~~~~~~
-Provides support for verisure components.
+Support for Verisure components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/verisure/
@@ -11,19 +9,12 @@ import threading
 import time
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
-from homeassistant.loader import get_component
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import validate_config, discovery
 from homeassistant.util import Throttle
 
+
 DOMAIN = "verisure"
-DISCOVER_SENSORS = 'verisure.sensors'
-DISCOVER_SWITCHES = 'verisure.switches'
-DISCOVER_ALARMS = 'verisure.alarm_control_panel'
-DISCOVER_LOCKS = 'verisure.lock'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +22,7 @@ HUB = None
 
 
 def setup(hass, config):
-    """ Setup the Verisure component. """
-
+    """Setup the Verisure component."""
     if not validate_config(config,
                            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -44,25 +34,18 @@ def setup(hass, config):
     if not HUB.login():
         return False
 
-    # Load components for the devices in the ISY controller that we support
-    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('switch', DISCOVER_SWITCHES),
-                                  ('alarm_control_panel', DISCOVER_ALARMS),
-                                  ('lock', DISCOVER_LOCKS))):
-        component = get_component(comp_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: discovery,
-                       ATTR_DISCOVERED: {}})
+    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock'):
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
 
 # pylint: disable=too-many-instance-attributes
 class VerisureHub(object):
-    """ Verisure wrapper class """
+    """A Verisure hub wrapper class."""
 
     def __init__(self, domain_config, verisure):
+        """Initialize the Verisure hub."""
         self.alarm_status = {}
         self.lock_status = {}
         self.climate_status = {}
@@ -78,7 +61,7 @@ class VerisureHub(object):
         # "wrong password" message. We will continue to retry after maintenance
         # regardless of that error.
         self._disable_wrong_password_error = False
-        self._wrong_password_given = False
+        self._password_retries = 1
         self._reconnect_timeout = time.time()
 
         self.my_pages = verisure.MyPages(
@@ -86,7 +69,7 @@ class VerisureHub(object):
             domain_config[CONF_PASSWORD])
 
     def login(self):
-        """ Login to MyPages """
+        """Login to Verisure MyPages."""
         try:
             self.my_pages.login()
         except self._verisure.Error as ex:
@@ -96,44 +79,46 @@ class VerisureHub(object):
 
     @Throttle(timedelta(seconds=1))
     def update_alarms(self):
-        """ Updates the status of the alarm. """
+        """Update the status of the alarm."""
         self.update_component(
             self.my_pages.alarm.get,
             self.alarm_status)
 
     @Throttle(timedelta(seconds=1))
     def update_locks(self):
-        """ Updates the status of the alarm. """
+        """Update the status of the locks."""
         self.update_component(
             self.my_pages.lock.get,
             self.lock_status)
 
     @Throttle(timedelta(seconds=60))
     def update_climate(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the climate units."""
         self.update_component(
             self.my_pages.climate.get,
             self.climate_status)
 
     @Throttle(timedelta(seconds=60))
     def update_mousedetection(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the mouse detectors."""
         self.update_component(
             self.my_pages.mousedetection.get,
             self.mouse_status)
 
     @Throttle(timedelta(seconds=1))
     def update_smartplugs(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the smartplugs."""
         self.update_component(
             self.my_pages.smartplug.get,
             self.smartplug_status)
 
+    @property
+    def available(self):
+        """Return True if hub is available."""
+        return self._password_retries >= 0
+
     def update_component(self, get_function, status):
-        """ Updates the status of verisure components. """
-        if self._wrong_password_given:
-            _LOGGER.error('Wrong password for Verisure, update config')
-            return
+        """Update the status of Verisure components."""
         try:
             for overview in get_function():
                 try:
@@ -141,30 +126,31 @@ class VerisureHub(object):
                 except AttributeError:
                     status[overview.deviceLabel] = overview
         except self._verisure.Error as ex:
-            _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
+            _LOGGER.info('Caught connection error %s, tries to reconnect', ex)
             self.reconnect()
 
     def reconnect(self):
-        """ Reconnect to verisure mypages. """
-        if self._reconnect_timeout > time.time():
-            return
-        if not self._lock.acquire(blocking=False):
+        """Reconnect to Verisure MyPages."""
+        if (self._reconnect_timeout > time.time() or
+                not self._lock.acquire(blocking=False) or
+                self._password_retries < 0):
             return
         try:
             self.my_pages.login()
             self._disable_wrong_password_error = False
+            self._password_retries = 1
         except self._verisure.LoginError as ex:
             _LOGGER.error("Wrong user name or password for Verisure MyPages")
             if self._disable_wrong_password_error:
-                self._reconnect_timeout = time.time() + 60
+                self._reconnect_timeout = time.time() + 60*60
             else:
-                self._wrong_password_given = True
+                self._password_retries = self._password_retries - 1
         except self._verisure.MaintenanceError:
             self._disable_wrong_password_error = True
-            self._reconnect_timeout = time.time() + 60
+            self._reconnect_timeout = time.time() + 60*60
             _LOGGER.error("Verisure MyPages down for maintenance")
         except self._verisure.Error as ex:
             _LOGGER.error("Could not login to Verisure MyPages, %s", ex)
-            self._reconnect_timeout = time.time() + 5
+            self._reconnect_timeout = time.time() + 60
         finally:
             self._lock.release()

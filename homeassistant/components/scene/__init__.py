@@ -1,7 +1,5 @@
 """
-homeassistant.components.scene
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows users to set and activate scenes.
+Allow users to set and activate scenes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
@@ -9,9 +7,12 @@ https://home-assistant.io/components/scene/
 import logging
 from collections import namedtuple
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, CONF_PLATFORM)
 from homeassistant.helpers import extract_domain_configs
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -21,11 +22,15 @@ STATE = 'scening'
 
 CONF_ENTITIES = "entities"
 
+SCENE_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
 def activate(hass, entity_id=None):
-    """ Activate a scene. """
+    """Activate a scene."""
     data = {}
 
     if entity_id:
@@ -35,8 +40,7 @@ def activate(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """ Sets up scenes. """
-
+    """Setup scenes."""
     logger = logging.getLogger(__name__)
 
     # You are not allowed to mutate the original config so make a copy
@@ -58,28 +62,31 @@ def setup(hass, config):
     component.setup(config)
 
     def handle_scene_service(service):
-        """ Handles calls to the switch services. """
+        """Handle calls to the switch services."""
         target_scenes = component.extract_from_service(service)
 
         for scene in target_scenes:
             scene.activate()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service,
+                           schema=SCENE_SERVICE_SCHEMA)
 
     return True
 
 
 class Scene(Entity):
-    """ A scene is a group of entities and the states we want them to be. """
+    """A scene is a group of entities and the states we want them to be."""
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def state(self):
+        """Return the state of the scene."""
         return STATE
 
     def activate(self):
-        """ Activates scene. Tries to get entities into requested state. """
+        """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError

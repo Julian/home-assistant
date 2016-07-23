@@ -1,12 +1,13 @@
-""" Starts home assistant. """
+"""Starts home assistant."""
 from __future__ import print_function
 
 import argparse
 import os
+import platform
+import subprocess
 import sys
+import threading
 
-import homeassistant.config as config_util
-from homeassistant import bootstrap
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -16,9 +17,9 @@ from homeassistant.const import (
 
 
 def ensure_config_path(config_dir):
-    """ Validates configuration directory. """
-
-    lib_dir = os.path.join(config_dir, 'lib')
+    """Validate the configuration directory."""
+    import homeassistant.config as config_util
+    lib_dir = os.path.join(config_dir, 'deps')
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
@@ -45,7 +46,8 @@ def ensure_config_path(config_dir):
 
 
 def ensure_config_file(config_dir):
-    """ Ensure configuration file exists. """
+    """Ensure configuration file exists."""
+    import homeassistant.config as config_util
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
@@ -56,7 +58,8 @@ def ensure_config_file(config_dir):
 
 
 def get_arguments():
-    """ Get parsed passed in arguments. """
+    """Get parsed passed in arguments."""
+    import homeassistant.config as config_util
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.")
     parser.add_argument('--version', action='version', version=__version__)
@@ -82,8 +85,9 @@ def get_arguments():
 
 
 def setup_and_run_hass(config_dir, args):
-    """
-    Setup HASS and run. Block until stopped."""
+    """Setup HASS and run."""
+    from homeassistant import bootstrap
+
     if args.demo_mode:
         config = {
             'frontend': {},
@@ -98,7 +102,7 @@ def setup_and_run_hass(config_dir, args):
 
     if args.open_ui:
         def open_browser(event):
-            """ Open the webinterface in a browser. """
+            """Open the webinterface in a browser."""
             if hass.config.api is not None:
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
@@ -114,6 +118,10 @@ def setup_and_run_hass(config_dir, args):
 def main():
     """ Starts Home Assistant. """
     args = get_arguments()
+
+    if args.script is not None:
+        from homeassistant import scripts
+        return scripts.run(args.script)
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
