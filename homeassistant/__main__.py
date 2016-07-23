@@ -80,6 +80,10 @@ def get_arguments():
         '-v', '--verbose',
         action='store_true',
         help="Enable verbose logging to file.")
+    parser.add_argument(
+        '--script',
+        nargs=argparse.REMAINDER,
+        help='Run one of the embedded scripts')
 
     return parser.parse_args()
 
