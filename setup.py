@@ -17,7 +17,6 @@ REQUIRES = [
     'pip>=7.0.0',
     'jinja2>=2.8',
     'voluptuous==0.9.1',
-    'typing>=3,<4',
     'sqlalchemy==1.0.14',
 ]
 

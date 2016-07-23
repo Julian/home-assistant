@@ -3,7 +3,7 @@ import importlib
 import os
 
 
-def run(args: str) -> int:
+def run(args):
     """Run a script."""
     scripts = [fil[:-3] for fil in os.listdir(os.path.dirname(__file__))
                if fil.endswith('.py') and fil != '__init__.py']
@@ -19,4 +19,4 @@ def run(args: str) -> int:
         return 1
 
     script = importlib.import_module('homeassistant.scripts.' + args[0])
-    return script.run(args[1:])  # type: ignore
+    return script.run(args[1:])

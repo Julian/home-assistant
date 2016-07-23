@@ -8,8 +8,6 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List
-
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -18,7 +16,7 @@ from homeassistant.const import (
 )
 
 
-def validate_python() -> None:
+def validate_python():
     """Validate we're running the right Python version."""
     major, minor = sys.version_info[:2]
     req_major, req_minor = REQUIRED_PYTHON_VER
@@ -29,7 +27,7 @@ def validate_python() -> None:
         sys.exit(1)
 
 
-def ensure_config_path(config_dir: str) -> None:
+def ensure_config_path(config_dir):
     """Validate the configuration directory."""
     import homeassistant.config as config_util
     lib_dir = os.path.join(config_dir, 'deps')
@@ -58,7 +56,7 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-def ensure_config_file(config_dir: str) -> str:
+def ensure_config_file(config_dir):
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
     config_path = config_util.ensure_config_exists(config_dir)
@@ -70,7 +68,7 @@ def ensure_config_file(config_dir: str) -> str:
     return config_path
 
 
-def get_arguments() -> argparse.Namespace:
+def get_arguments():
     """Get parsed passed in arguments."""
     import homeassistant.config as config_util
     parser = argparse.ArgumentParser(
@@ -127,12 +125,12 @@ def get_arguments() -> argparse.Namespace:
 
     arguments = parser.parse_args()
     if os.name != "posix" or arguments.debug or arguments.runner:
-        setattr(arguments, 'daemon', False)
+        arguments.daemon = False
 
     return arguments
 
 
-def daemonize() -> None:
+def daemonize():
     """Move current process to daemon process."""
     # Create first fork
     pid = os.fork()
@@ -157,7 +155,7 @@ def daemonize() -> None:
     os.dup2(outfd.fileno(), sys.stderr.fileno())
 
 
-def check_pid(pid_file: str) -> None:
+def check_pid(pid_file):
     """Check that HA is not already running."""
     # Check pid file
     try:
@@ -179,7 +177,7 @@ def check_pid(pid_file: str) -> None:
     sys.exit(1)
 
 
-def write_pid(pid_file: str) -> None:
+def write_pid(pid_file):
     """Create a PID File."""
     pid = os.getpid()
     try:
@@ -189,7 +187,7 @@ def write_pid(pid_file: str) -> None:
         sys.exit(1)
 
 
-def closefds_osx(min_fd: int, max_fd: int) -> None:
+def closefds_osx(min_fd, max_fd):
     """Make sure file descriptors get closed when we restart.
 
     We cannot call close on guarded fds, and we cannot easily test which fds
@@ -207,7 +205,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
             pass
 
 
-def cmdline() -> List[str]:
+def cmdline():
     """Collect path and arguments to re-execute the current hass instance."""
     if sys.argv[0].endswith('/__main__.py'):
         modulepath = os.path.dirname(sys.argv[0])
@@ -215,17 +213,16 @@ def cmdline() -> List[str]:
     return [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
 
 
-def setup_and_run_hass(config_dir: str,
-                       args: argparse.Namespace) -> Optional[int]:
+def setup_and_run_hass(config_dir, args):
     """Setup HASS and run."""
     from homeassistant import bootstrap
 
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == 'nt' and '--runner' not in sys.argv:
-        nt_args = cmdline() + ['--runner']
+        args = cmdline() + ['--runner']
         while True:
             try:
-                subprocess.check_call(nt_args)
+                subprocess.check_call(args)
                 sys.exit(0)
             except subprocess.CalledProcessError as exc:
                 if exc.returncode != RESTART_EXIT_CODE:
@@ -247,7 +244,7 @@ def setup_and_run_hass(config_dir: str,
             log_rotate_days=args.log_rotate_days)
 
     if hass is None:
-        return None
+        return
 
     if args.open_ui:
         def open_browser(event):
@@ -264,7 +261,7 @@ def setup_and_run_hass(config_dir: str,
     return exit_code
 
 
-def try_to_restart() -> None:
+def try_to_restart():
     """Attempt to clean up state and start a new homeassistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
@@ -306,7 +303,7 @@ def try_to_restart() -> None:
     os.execv(args[0], args)
 
 
-def main() -> int:
+def main():
     """Start Home Assistant."""
     validate_python()
 

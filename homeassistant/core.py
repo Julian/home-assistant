@@ -57,7 +57,7 @@ class CoreState(enum.Enum):
     running = "RUNNING"
     stopping = "STOPPING"
 
-    def __str__(self) -> str:
+    def __str__(self):
         """Return the event."""
         return self.value
 
@@ -75,11 +75,11 @@ class HomeAssistant(object):
         self.state = CoreState.not_running
 
     @property
-    def is_running(self) -> bool:
+    def is_running(self):
         """Return if Home Assistant is running."""
         return self.state == CoreState.running
 
-    def start(self) -> None:
+    def start(self):
         """Start home assistant."""
         _LOGGER.info(
             "Starting Home Assistant (%d threads)", self.pool.worker_count)
@@ -90,7 +90,7 @@ class HomeAssistant(object):
         self.pool.block_till_done()
         self.state = CoreState.running
 
-    def block_till_stopped(self) -> int:
+    def block_till_stopped(self):
         """Register service homeassistant/stop and will block until called."""
         request_shutdown = threading.Event()
         request_restart = threading.Event()
@@ -132,7 +132,7 @@ class HomeAssistant(object):
 
         return RESTART_EXIT_CODE if request_restart.isSet() else 0
 
-    def stop(self) -> None:
+    def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
         self.state = CoreState.stopping
@@ -290,7 +290,7 @@ class EventBus(object):
             # available to execute this listener it might occur that the
             # listener gets lined up twice to be executed.
             # This will make sure the second time it does nothing.
-            setattr(onetime_listener, 'run', True)
+            onetime_listener.run = True
 
             self.remove_listener(event_type, onetime_listener)
 
