@@ -354,8 +354,9 @@ class HomeAssistantWSGI(object):
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             self.server.ssl_adapter = ContextSSLAdapter(context)
 
-        threading.Thread(target=self.server.start, daemon=True,
-                         name='WSGI-server').start()
+        thread = threading.Thread(target=self.server.start, name='WSGI-server')
+        thread.daemon = True
+        thread.start()
 
     def stop(self):
         """Stop the wsgi server."""
