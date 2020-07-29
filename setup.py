@@ -20,7 +20,7 @@ REQUIRES = [
     'sqlalchemy==1.0.14',
     'static3==0.7.0',
     'voluptuous==0.9.1',
-    'werkzeug==0.11.10',
+    'werkzeug==0.15.3',
 ]
 
 setup(
